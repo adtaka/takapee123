@@ -1,0 +1,45 @@
+
+Access VBAで、先頭フィールドのデータ型を判定するには、DAO.FieldオブジェクトのTypeプロパティを使用します。このプロパティは、そのフィールドのデータ型を示す値を返します。返されるデータ型は、Accessで定義されている定数を使用して表現されます。
+
+先頭項目のデータ型を取得する例
+vba
+コードをコピーする
+Dim db As DAO.Database
+Dim tdf As DAO.TableDef
+Dim fld As DAO.Field
+Dim tableName As String
+Dim firstFieldType As Integer
+
+tableName = "テーブル名" ' テーブル名を指定
+
+' データベースを参照
+Set db = CurrentDb
+
+' テーブル定義を取得
+Set tdf = db.TableDefs(tableName)
+
+' 最初のフィールドのデータ型を取得
+firstFieldType = tdf.Fields(0).Type
+
+' データ型を判定し、メッセージボックスに表示
+Select Case firstFieldType
+    Case dbText
+        MsgBox "先頭項目のデータ型は: テキスト型"
+    Case dbInteger
+        MsgBox "先頭項目のデータ型は: 整数型"
+    Case dbLong
+        MsgBox "先頭項目のデータ型は: ロング整数型"
+    Case dbBoolean
+        MsgBox "先頭項目のデータ型は: ブール型"
+    Case dbDate
+        MsgBox "先頭項目のデータ型は: 日付型"
+    Case dbCurrency
+        MsgBox "先頭項目のデータ型は: 通貨型"
+    ' その他のデータ型もここで追加できます
+    Case Else
+        MsgBox "先頭項目のデータ型は: 不明"
+End Select
+
+' オブジェクトの解放
+Set tdf = Nothing
+Set db = Nothing
