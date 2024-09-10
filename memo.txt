@@ -43,3 +43,25 @@ End Select
 ' オブジェクトの解放
 Set tdf = Nothing
 Set db = Nothing
+
+
+Sub UpdateFieldToNull()
+    Dim db As DAO.Database
+    Dim sql As String
+
+    ' データベースの参照を取得
+    Set db = CurrentDb
+
+    ' UPDATE クエリで NULL を設定
+    sql = "UPDATE YourTableName SET YourFieldName = NULL WHERE ConditionField = 'SomeCondition'"
+
+    ' SQL クエリを実行
+    db.Execute sql
+
+    ' メッセージ表示（オプション）
+    MsgBox "フィールドが NULL に更新されました"
+
+    ' データベースオブジェクトの解放
+    Set db = Nothing
+End Sub
+
