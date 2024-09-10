@@ -65,3 +65,50 @@ Sub UpdateFieldToNull()
     Set db = Nothing
 End Sub
 
+Sub WriteToSpecificLine()
+    Dim fso As Object
+    Dim filePath As String
+    Dim file As Object
+    Dim fileContent As String
+    Dim lines() As String
+    Dim i As Integer
+    Dim targetLine As Integer
+    Dim newText As String
+    
+    ' FileSystemObjectを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' ファイルパスを指定
+    filePath = "C:\path\to\your\file.txt"
+    
+    ' 読み込みたい行番号と書き込みたいテキスト
+    targetLine = 3  ' 例：3行目を書き換える
+    newText = "This is the new content for line 3"
+    
+    ' ファイルを開いて全内容を読み込む
+    Set file = fso.OpenTextFile(filePath, 1)  ' 読み込みモード
+    fileContent = file.ReadAll
+    file.Close
+    
+    ' 内容を行ごとに分割して配列に格納
+    lines = Split(fileContent, vbCrLf)
+    
+    ' 指定された行を新しいテキストに書き換える
+    If targetLine <= UBound(lines) + 1 Then
+        lines(targetLine - 1) = newText
+    Else
+        MsgBox "指定された行はファイルの行数を超えています。"
+        Exit Sub
+    End If
+    
+    ' ファイルを開いて上書き保存する
+    Set file = fso.OpenTextFile(filePath, 2)  ' 書き込みモード
+    For i = LBound(lines) To UBound(lines)
+        file.WriteLine lines(i)
+    Next i
+    file.Close
+    
+    MsgBox "指定された行が正常に書き換えられました。"
+End Sub
+
+
