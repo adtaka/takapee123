@@ -133,3 +133,26 @@ Sub SetFieldRequiredToNo()
 End Sub
 
 
+Sub SetAllFieldsRequiredToNo()
+    Dim db As DAO.Database
+    Dim tdf As DAO.TableDef
+    Dim fld As DAO.Field
+    
+    ' 現在のデータベースを取得
+    Set db = CurrentDb
+    
+    ' テーブル定義を取得（例：Table1）
+    Set tdf = db.TableDefs("Table1")
+    
+    ' テーブル内のすべてのフィールドをループ
+    For Each fld In tdf.Fields
+        ' フィールドの「値要求」を「いいえ」に設定
+        fld.Required = False
+    Next fld
+    
+    ' 変更を保存
+    tdf.Fields.Refresh
+    MsgBox "すべてのフィールドの値要求が「いいえ」に設定されました。"
+End Sub
+
+
