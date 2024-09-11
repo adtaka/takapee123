@@ -112,3 +112,24 @@ Sub WriteToSpecificLine()
 End Sub
 
 
+Sub SetFieldRequiredToNo()
+    Dim db As DAO.Database
+    Dim tdf As DAO.TableDef
+    Dim fld As DAO.Field
+    
+    ' 現在のデータベースを取得
+    Set db = CurrentDb
+    
+    ' テーブル定義を取得（例：Table1）
+    Set tdf = db.TableDefs("Table1")
+    
+    ' 対象のフィールド（例：Field1）の値要求を「いいえ」に設定
+    Set fld = tdf.Fields("Field1")
+    fld.Required = False  ' 値要求を「いいえ」に設定
+    
+    ' 変更を保存
+    tdf.Fields.Refresh
+    MsgBox "Field1 の値要求が「いいえ」に設定されました。"
+End Sub
+
+
