@@ -227,3 +227,70 @@ Sub ExportQueryToPDF()
     MsgBox "クエリ結果がPDFファイルにエクスポートされました: " & filePath
 End Sub
 
+Sub CreateQueryAndExportToPDF()
+    Dim db As DAO.Database
+    Dim qdf As DAO.QueryDef
+    Dim sqlStr As String
+    Dim filePath As String
+    
+    ' データベースオブジェクトの取得
+    Set db = CurrentDb
+    
+    ' クエリのSQL文を作成 (必要に応じてSQL文を変更)
+    sqlStr = "SELECT Field1, Field2, Field3 FROM YourTable WHERE SomeCondition = True"
+    
+    ' 既存のクエリがあれば削除
+    On Error Resume Next
+    db.QueryDefs.Delete "TempQuery"
+    On Error GoTo 0
+    
+    ' クエリ定義を作成
+    Set qdf = db.CreateQueryDef("TempQuery", sqlStr)
+    
+    ' PDFファイルの保存場所を指定
+    filePath = "C:\YourFolder\query_output.pdf"
+    
+    ' クエリをPDFにエクスポート
+    DoCmd.OutputTo acOutputQuery, "TempQuery", acFormatPDF, filePath, True
+    
+    MsgBox "クエリ結果がPDFファイルにエクスポートされました: " & filePath
+    
+    ' リソースの解放
+    Set qdf = Nothing
+    Set db = Nothing
+End Sub
+
+Sub CreateQueryAndExportToPDF()
+    Dim db As DAO.Database
+    Dim qdf As DAO.QueryDef
+    Dim sqlStr As String
+    Dim filePath As String
+    
+    ' データベースオブジェクトの取得
+    Set db = CurrentDb
+    
+    ' クエリのSQL文を作成 (必要に応じてSQL文を変更)
+    sqlStr = "SELECT Field1, Field2, Field3 FROM YourTable WHERE SomeCondition = True"
+    
+    ' 既存のクエリがあれば削除
+    On Error Resume Next
+    db.QueryDefs.Delete "TempQuery"
+    On Error GoTo 0
+    
+    ' クエリ定義を作成
+    Set qdf = db.CreateQueryDef("TempQuery", sqlStr)
+    
+    ' PDFファイルの保存場所を指定
+    filePath = "C:\YourFolder\query_output.pdf"
+    
+    ' クエリをPDFにエクスポート
+    DoCmd.OutputTo acOutputQuery, "TempQuery", acFormatPDF, filePath, True
+    
+    MsgBox "クエリ結果がPDFファイルにエクスポートされました: " & filePath
+    
+    ' リソースの解放
+    Set qdf = Nothing
+    Set db = Nothing
+End Sub
+
+
