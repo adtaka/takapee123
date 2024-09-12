@@ -334,3 +334,36 @@ Sub ExportAndDeleteIni()
     ' リソースの解放
     Set fso = Nothing
 End Sub
+
+
+Sub DeleteAllFilesInFolder()
+    Dim fso As Object
+    Dim folderPath As String
+    Dim folder As Object
+    Dim file As Object
+    
+    ' 削除したいフォルダーのパスを指定
+    folderPath = "C:\YourFolder\"
+    
+    ' FileSystemObjectを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' フォルダーが存在するか確認
+    If fso.FolderExists(folderPath) Then
+        ' フォルダー内のすべてのファイルを取得
+        Set folder = fso.GetFolder(folderPath)
+        
+        ' フォルダー内の各ファイルを削除
+        For Each file In folder.Files
+            file.Delete
+        Next file
+        
+        MsgBox "フォルダー内のすべてのファイルが削除されました: " & folderPath
+    Else
+        MsgBox "指定されたフォルダーは存在しません: " & folderPath
+    End If
+    
+    ' リソースの解放
+    Set folder = Nothing
+    Set fso = Nothing
+End Sub
