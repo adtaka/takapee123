@@ -407,3 +407,26 @@ Sub ConcatenateAllFields()
     Set rs = Nothing
     Set db = Nothing
 End Sub
+
+
+
+Dim db As DAO.Database
+Dim rs As DAO.Recordset
+Dim sql As String
+
+sql = "SELECT Table1.ItemID, Table1.OtherField1, Table2.OtherField2 " & _
+      "FROM Table1 " & _
+      "INNER JOIN Table2 ON Table1.ItemID = Table2.ItemID;"
+
+Set db = CurrentDb
+Set rs = db.OpenRecordset(sql)
+
+' 結果を操作するコード
+Do While Not rs.EOF
+    Debug.Print rs!ItemID & ", " & rs!OtherField1 & ", " & rs!OtherField2
+    rs.MoveNext
+Loop
+
+rs.Close
+Set rs = Nothing
+Set db = Nothing
