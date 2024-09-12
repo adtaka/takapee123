@@ -367,3 +367,43 @@ Sub DeleteAllFilesInFolder()
     Set folder = Nothing
     Set fso = Nothing
 End Sub
+
+
+
+
+Sub ConcatenateAllFields()
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim fld As DAO.Field
+    Dim sql As String
+    Dim tableName As String
+    Dim concatenatedFields As String
+    
+    tableName = "Table1" ' テーブル名を指定
+    concatenatedFields = ""
+
+    ' データベースを取得
+    Set db = CurrentDb
+    
+    ' テーブルのフィールド名を取得
+    Set rs = db.OpenRecordset(tableName)
+    
+    ' フィールドをすべて連結
+    For Each fld In rs.Fields
+        If concatenatedFields <> "" Then
+            concatenatedFields = concatenatedFields & " & ', ' & "
+        End If
+        concatenatedFields = concatenatedFields & "[" & fld.Name & "]"
+    Next fld
+    
+    ' SQL文を作成
+    sql = "SELECT " & concatenatedFields & " AS ConcatenatedFields FROM " & tableName & ";"
+    
+    ' SQL文を出力（または実行）
+    Debug.Print sql
+    ' DoCmd.RunSQL sql ' 実行する場合
+    
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+End Sub
