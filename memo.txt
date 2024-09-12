@@ -155,4 +155,75 @@ Sub SetAllFieldsRequiredToNo()
     MsgBox "すべてのフィールドの値要求が「いいえ」に設定されました。"
 End Sub
 
+Sub ExportQueryToCSV()
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim fso As Object
+    Dim txtFile As Object
+    Dim filePath As String
+    Dim i As Integer
+    Dim line As String
+    
+    ' 出力ファイルのパス
+    filePath = "C:\YourFolder\exported_query.csv"
+    
+    ' データベースとクエリの結果セットを開く
+    Set db = CurrentDb
+    Set rs = db.OpenRecordset("MyQuery", dbOpenSnapshot)
+    
+    ' ファイルシステムオブジェクトを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set txtFile = fso.CreateTextFile(filePath, True)
+    
+    ' ヘッダー行を書き込み
+    For i = 0 To rs.Fields.Count - 1
+        line = line & rs.Fields(i).Name & ","
+    Next i
+    ' 最後のカンマを削除して改行
+    line = Left(line, Len(line) - 1)
+    txtFile.WriteLine line
+    
+    ' レコードを書き込み
+    Do While Not rs.EOF
+        line = ""
+        For i = 0 To rs.Fields.Count - 1
+            line = line & rs.Fields(i).Value & ","
+        Next i
+        line = Left(line, Len(line) - 1)
+        txtFile.WriteLine line
+        rs.MoveNext
+    Loop
+    
+    ' リソースの解放
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+    txtFile.Close
+    Set txtFile = Nothing
+    Set fso = Nothing
+    
+    MsgBox "クエリ結果がCSVファイルにエクスポートされました: " & filePath
+End Sub
+
+
+
+Sub ExportQueryToCSV_OutputTo()
+    Dim filePath As String
+    filePath = "C:\YourFolder\exported_query.csv" ' 出力ファイルのパス
+    
+    ' DoCmd.OutputToを使用してクエリをCSVファイルにエクスポート
+    DoCmd.OutputTo acOutputQuery, "MyQuery", acFormatTXT, filePath, True
+    
+    MsgBox "クエリ結果がCSVファイルにエクスポートされました: " & filePath
+End Sub
+
+Sub ExportQueryToPDF()
+    Dim filePath As String
+    filePath = "C:\YourFolder\exported_query.pdf" ' 出力するPDFファイルのパス
+    
+    ' DoCmd.OutputToメソッドを使用してクエリをPDFにエクスポート
+    DoCmd.OutputTo acOutputQuery, "MyQuery", acFormatPDF, filePath, True
+    
+    MsgBox "クエリ結果がPDFファイルにエクスポートされました: " & filePath
+End Sub
 
