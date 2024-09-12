@@ -294,3 +294,14 @@ Sub CreateQueryAndExportToPDF()
 End Sub
 
 
+
+
+Sub ExportQueryToCSV_TransferText()
+    Dim filePath As String
+    filePath = "C:\YourFolder\exported_query.csv" ' 出力ファイルのパス
+    
+    ' DoCmd.TransferTextを使用してクエリをCSVファイルにエクスポート
+    DoCmd.TransferText acExportDelim, , "MyQuery", filePath, True
+    
+    MsgBox "クエリ結果がCSVファイルにエクスポートされました: " & filePath
+End Sub
