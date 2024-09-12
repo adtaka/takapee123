@@ -305,3 +305,32 @@ Sub ExportQueryToCSV_TransferText()
     
     MsgBox "クエリ結果がCSVファイルにエクスポートされました: " & filePath
 End Sub
+
+
+Sub ExportAndDeleteIni()
+    Dim filePath As String
+    Dim fso As Object
+    Dim iniFilePath As String
+    
+    ' CSVファイルの保存場所を指定
+    filePath = "C:\YourFolder\exported_query.csv"
+    
+    ' DoCmd.TransferTextメソッドでクエリをCSVにエクスポート
+    DoCmd.TransferText acExportDelim, , "MyQuery", filePath, True
+    
+    ' export.iniファイルのパス
+    iniFilePath = "C:\YourFolder\export.ini"
+    
+    ' ファイルシステムオブジェクトを使ってexport.iniを削除
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' export.iniが存在する場合に削除
+    If fso.FileExists(iniFilePath) Then
+        fso.DeleteFile iniFilePath
+    End If
+    
+    MsgBox "クエリ結果がCSVファイルにエクスポートされ、export.iniファイルは削除されました。"
+    
+    ' リソースの解放
+    Set fso = Nothing
+End Sub
