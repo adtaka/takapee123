@@ -489,3 +489,66 @@ Sub ConcatenateAllFields()
     Set db = Nothing
 End Sub
 
+
+
+Sub CompareAllFieldsInTables()
+    Dim db As DAO.Database
+    Dim rsA As DAO.Recordset
+    Dim rsB As DAO.Recordset
+    Dim fld As DAO.Field
+    Dim sqlA As String
+    Dim sqlB As String
+    Dim matchFound As Boolean
+    Dim i As Integer
+    Dim diffCount As Integer
+
+    Set db = CurrentDb
+    
+    ' テーブルAから全てのレコードを取得
+    sqlA = "SELECT * FROM テーブルA"
+    Set rsA = db.OpenRecordset(sqlA)
+    
+    ' テーブルBのレコードをIDで検索
+    Do While Not rsA.EOF
+        sqlB = "SELECT * FROM テーブルB WHERE ID = " & rsA!ID
+        Set rsB = db.OpenRecordset(sqlB)
+        
+        If Not rsB.EOF Then
+            matchFound = True
+            diffCount = 0
+            
+            ' すべてのフィールドをループして比較
+            For i = 0 To rsA.Fields.Count - 1
+                Set fld = rsA.Fields(i)
+                
+                ' IDフィールドはスキップ（すでに一致で検索しているため）
+                If fld.Name <> "ID" Then
+                    If rsA.Fields(i).Value <> rsB.Fields(i).Value Then
+                        Debug.Print "ID " & rsA!ID & " の " & fld.Name & " が異なります: " & rsA.Fields(i).Value & " vs " & rsB.Fields(i).Value
+                        matchFound = False
+                        diffCount = diffCount + 1
+                    End If
+                End If
+            Next i
+            
+            If matchFound Then
+                Debug.Print "ID " & rsA!ID & " のレコードは全て一致します。"
+            Else
+                Debug.Print "ID " & rsA!ID & " のレコードは " & diffCount & " 個のフィールドが異なります。"
+            End If
+        Else
+            Debug.Print "ID " & rsA!ID & " はテーブルBに存在しません。"
+        End If
+        
+        rsA.MoveNext
+    Loop
+    
+    ' クリーンアップ
+    rsA.Close
+    rsB.Close
+    Set rsA = Nothing
+    Set rsB = Nothing
+    Set db = Nothing
+End Sub
+
+
