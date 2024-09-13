@@ -430,3 +430,24 @@ Loop
 rs.Close
 Set rs = Nothing
 Set db = Nothing
+
+
+
+
+Sub GetFieldCount()
+    Dim db As DAO.Database
+    Dim tdf As DAO.TableDef
+    Dim fldCount As Integer
+    
+    ' 現在のデータベースを取得
+    Set db = CurrentDb
+    
+    ' テーブルの TableDef オブジェクトを取得 (例: "MyTable" がテーブル名)
+    Set tdf = db.TableDefs("MyTable")
+    
+    ' テーブルのフィールド数を取得
+    fldCount = tdf.Fields.Count
+    
+    ' 結果を表示
+    MsgBox "フィールドの数: " & fldCount
+End Sub
