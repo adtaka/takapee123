@@ -552,3 +552,18 @@ Sub CompareAllFieldsInTables()
 End Sub
 
 
+Function ConvertSecondsToTime(seconds As Long) As String
+    Dim hours As Long
+    Dim minutes As Long
+    Dim secs As Long
+    
+    ' 時間、分、秒を計算
+    hours = seconds \ 3600
+    minutes = (seconds Mod 3600) \ 60
+    secs = seconds Mod 60
+    
+    ' 結果をフォーマットして返す
+    ConvertSecondsToTime = Format(hours, "00") & ":" & Format(minutes, "00") & ":" & Format(secs, "00")
+End Function
+
+
