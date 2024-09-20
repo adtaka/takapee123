@@ -582,3 +582,42 @@ For Each key In myDict.Keys
     Debug.Print key & ": " & myDict(key)
 Next key
 
+
+
+Sub CreateTableInAccessWithErrorHandling()
+    On Error GoTo ErrorHandler
+    Dim db As DAO.Database
+    Dim tbl As DAO.TableDef
+    Dim fld As DAO.Field
+
+    ' 現在のデータベースを開く
+    Set db = CurrentDb
+    
+    ' 新しいテーブルを作成
+    Set tbl = db.CreateTableDef("MyNewTable")
+    
+    ' フィールドをテーブルに追加
+    Set fld = tbl.CreateField("ID", dbLong)
+    tbl.Fields.Append fld
+    
+    Set fld = tbl.CreateField("Name", dbText, 50)
+    tbl.Fields.Append fld
+    
+    Set fld = tbl.CreateField("BirthDate", dbDate)
+    tbl.Fields.Append fld
+    
+    ' テーブルをデータベースに追加
+    db.TableDefs.Append tbl
+    
+    MsgBox "テーブルが作成されました!"
+    
+    ' オブジェクトの解放
+    Set fld = Nothing
+    Set tbl = Nothing
+    Set db = Nothing
+    Exit Sub
+    
+ErrorHandler:
+    MsgBox "エラーが発生しました: " & Err.Description
+End Sub
+
