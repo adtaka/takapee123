@@ -567,3 +567,18 @@ Function ConvertSecondsToTime(seconds As Long) As String
 End Function
 
 
+
+Dim myDict As Object
+Set myDict = CreateObject("Scripting.Dictionary")
+
+' アイテムの追加
+myDict.Add "Fruit1", "Apple"
+myDict.Add "Fruit2", "Banana"
+myDict.Add "Fruit3", "Cherry"
+
+' Dictionaryの内容をループで表示
+Dim key As Variant
+For Each key In myDict.Keys
+    Debug.Print key & ": " & myDict(key)
+Next key
+
