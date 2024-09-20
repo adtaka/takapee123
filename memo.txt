@@ -621,3 +621,12 @@ ErrorHandler:
     MsgBox "エラーが発生しました: " & Err.Description
 End Sub
 
+Sub ExportTableToExcelUsingTransferSpreadsheet()
+    Dim strPath As String
+    strPath = "C:\path\to\your\file.xlsx" ' エクスポートするファイルのパスを指定
+    
+    ' AccessテーブルをExcelにエクスポート
+    DoCmd.TransferSpreadsheet acExport, acSpreadsheetTypeExcel12Xml, "TableName", strPath, True
+End Sub
+
+
