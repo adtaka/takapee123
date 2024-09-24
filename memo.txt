@@ -940,3 +940,95 @@ Function FieldTypeName(typeCode As Integer) As String
     End Select
 End Function
 
+
+Sub ExportAllPrimaryKeysToExcel()
+    Dim fso As Object
+    Dim folder As Object
+    Dim file As Object
+    Dim db As DAO.Database
+    Dim tbl As DAO.TableDef
+    Dim idx As DAO.Index
+    Dim fld As DAO.Field
+    Dim excelApp As Object
+    Dim workbook As Object
+    Dim worksheet As Object
+    Dim row As Integer
+    Dim folderPath As String
+    Dim filePath As String
+    
+    ' エクスポート先のExcelアプリケーションのインスタンスを作成
+    Set excelApp = CreateObject("Excel.Application")
+    excelApp.Visible = True
+    Set workbook = excelApp.Workbooks.Add
+    
+    ' 新しいワークシートを作成
+    Set worksheet = workbook.Sheets.Add
+    worksheet.Name = "PrimaryKeys"
+    
+    ' ヘッダ行を書き込み
+    worksheet.Cells(1, 1).Value = "File Name"
+    worksheet.Cells(1, 2).Value = "Table Name"
+    worksheet.Cells(1, 3).Value = "Primary Key Field"
+    
+    ' 行インデックスの初期化
+    row = 2
+    
+    ' フォルダパスを設定
+    folderPath = "C:\指定フォルダパス" ' ここを指定するフォルダパスに変更してください
+    
+    ' ファイルシステムオブジェクト(FSO)を使ってフォルダ内のファイルを取得
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(folderPath)
+    
+    ' フォルダ内のすべてのファイルをループ
+    For Each file In folder.Files
+        ' Accessファイル（.accdb または .mdb）かどうか確認
+        If LCase(fso.GetExtensionName(file.Name)) = "accdb" Or LCase(fso.GetExtensionName(file.Name)) = "mdb" Then
+            ' 各ファイルのフルパス
+            filePath = folderPath & "\" & file.Name
+            
+            ' Accessファイルを開く
+            Set db = DBEngine.OpenDatabase(filePath)
+            
+            ' テーブルをループ
+            For Each tbl In db.TableDefs
+                ' システムテーブルを除外するための条件
+                If Left(tbl.Name, 4) <> "MSys" Then
+                    ' インデックスをループしてプライマリキーを確認
+                    For Each idx In tbl.Indexes
+                        If idx.Primary Then
+                            ' プライマリキーのフィールド名をループしてExcelに出力
+                            For Each fld In idx.Fields
+                                worksheet.Cells(row, 1).Value = file.Name
+                                worksheet.Cells(row, 2).Value = tbl.Name
+                                worksheet.Cells(row, 3).Value = fld.Name
+                                row = row + 1
+                            Next fld
+                        End If
+                    Next idx
+                End If
+            Next tbl
+            
+            ' Accessデータベースを閉じる
+            db.Close
+            Set db = Nothing
+        End If
+    Next file
+    
+    ' Excelファイルの保存
+    filePath = folderPath & "\PrimaryKeysList.xlsx"
+    workbook.SaveAs filePath
+    
+    ' クリーンアップ
+    workbook.Close
+    excelApp.Quit
+    Set workbook = Nothing
+    Set excelApp = Nothing
+    Set fld = Nothing
+    Set tbl = Nothing
+    Set fso = Nothing
+    Set folder = Nothing
+    
+    MsgBox "すべてのプライマリキーの項目がエクスポートされました: " & filePath
+End Sub
+
