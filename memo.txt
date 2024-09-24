@@ -649,3 +649,34 @@ Next
 ' オブジェクトを解放
 Set folder = Nothing
 Set fso = Nothing
+
+
+' Access ファイルからテーブル名を取得するスクリプト
+
+Dim accessApp, dbPath, db
+dbPath = "C:\Your\Access\Database.accdb" ' Access データベースのパスを指定
+
+' Access アプリケーションオブジェクトを作成
+Set accessApp = CreateObject("Access.Application")
+
+' データベースを開く
+accessApp.OpenCurrentDatabase dbPath
+
+' データベースのテーブルコレクションにアクセス
+Set db = accessApp.CurrentDb
+
+Dim tableDef
+For Each tableDef In db.TableDefs
+    ' システムテーブルは除外 (MSys で始まるテーブルはシステムテーブル)
+    If Left(tableDef.Name, 4) <> "MSys" Then
+        WScript.Echo tableDef.Name
+    End If
+Next
+
+' Access アプリケーションを閉じる
+accessApp.CloseCurrentDatabase
+accessApp.Quit
+
+' オブジェクトの解放
+Set db = Nothing
+Set accessApp = Nothing
