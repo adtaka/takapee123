@@ -1385,3 +1385,178 @@ End Function
 
 
 
+
+
+
+Sub ExportTableDefinitionsToAccess()
+    Dim fso As Object
+    Dim folder As Object
+    Dim file As Object
+    Dim db As DAO.Database
+    Dim tbl As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim idx As DAO.Index
+    Dim rs As DAO.Recordset
+    Dim dbCurrent As DAO.Database
+    Dim folderPath As String
+    Dim filePath As String
+    Dim fieldRequired As Boolean
+    Dim fieldIndexed As Boolean
+    Dim isPrimaryKey As Boolean
+    Dim fieldDescription As String
+    Dim fieldDefaultValue As String
+    Dim fieldValidationRule As String
+    Dim fieldFormat As String
+    
+    ' 現在のデータベース（保存先）を取得
+    Set dbCurrent = CurrentDb
+    
+    ' 新しいテーブルを作成
+    On Error Resume Next
+    dbCurrent.Execute "DROP TABLE TableDefinitions" ' 既存のテーブルがあれば削除
+    On Error GoTo 0
+    
+    dbCurrent.Execute "CREATE TABLE TableDefinitions (" & _
+                      "FileName TEXT(255), " & _
+                      "TableName TEXT(255), " & _
+                      "FieldName TEXT(255), " & _
+                      "DataType TEXT(50), " & _
+                      "FieldSize LONG, " & _
+                      "Required YESNO, " & _
+                      "Indexed YESNO, " & _
+                      "PrimaryKey YESNO, " & _
+                      "Description TEXT(255), " & _
+                      "DefaultValue TEXT(255), " & _
+                      "ValidationRule TEXT(255), " & _
+                      "Format TEXT(255))"
+    
+    ' テーブル定義情報を保存するためのレコードセットを開く
+    Set rs = dbCurrent.OpenRecordset("TableDefinitions", dbOpenDynaset)
+    
+    ' フォルダパスを設定
+    folderPath = "C:\指定フォルダパス" ' ここを指定するフォルダパスに変更してください
+    
+    ' ファイルシステムオブジェクト(FSO)を使ってフォルダ内のファイルを取得
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(folderPath)
+    
+    ' フォルダ内のすべてのファイルをループ
+    For Each file In folder.Files
+        ' Accessファイル（.accdb または .mdb）かどうか確認
+        If LCase(fso.GetExtensionName(file.Name)) = "accdb" Or LCase(fso.GetExtensionName(file.Name)) = "mdb" Then
+            ' 各ファイルのフルパス
+            filePath = folderPath & "\" & file.Name
+            
+            ' Accessファイルを開く
+            Set db = DBEngine.OpenDatabase(filePath)
+            
+            ' テーブルをループ
+            For Each tbl In db.TableDefs
+                ' システムテーブルを除外するための条件
+                If Left(tbl.Name, 4) <> "MSys" Then
+                    ' テーブルのフィールドをループ
+                    For Each fld In tbl.Fields
+                        ' フィールド属性を取得
+                        fieldRequired = fld.Required
+                        fieldDescription = ""
+                        fieldDefaultValue = ""
+                        fieldValidationRule = ""
+                        fieldFormat = ""
+                        
+                        ' エラー回避のためのエラーハンドリング
+                        On Error Resume Next
+                        fieldDescription = fld.Properties("Description")
+                        fieldDefaultValue = fld.DefaultValue
+                        fieldValidationRule = fld.ValidationRule
+                        fieldFormat = fld.Format
+                        On Error GoTo 0
+                        
+                        ' インデックスとプライマリキーの確認
+                        fieldIndexed = False
+                        isPrimaryKey = False
+                        
+                        For Each idx In tbl.Indexes
+                            If idx.Primary Then
+                                Dim i As Integer
+                                For i = 0 To idx.Fields.Count - 1
+                                    If idx.Fields(i).Name = fld.Name Then
+                                        isPrimaryKey = True
+                                    End If
+                                Next i
+                            End If
+                        Next idx
+                        
+                        ' レコードを追加
+                        rs.AddNew
+                        rs!FileName = file.Name
+                        rs!TableName = tbl.Name
+                        rs!FieldName = fld.Name
+                        rs!DataType = FieldTypeName(fld.Type)
+                        rs!FieldSize = fld.Size
+                        rs!Required = fieldRequired
+                        rs!Indexed = fieldIndexed
+                        rs!PrimaryKey = isPrimaryKey
+                        rs!Description = fieldDescription
+                        rs!DefaultValue = fieldDefaultValue
+                        rs!ValidationRule = fieldValidationRule
+                        rs!Format = fieldFormat
+                        rs.Update
+                    Next fld
+                End If
+            Next tbl
+            
+            ' Accessデータベースを閉じる
+            db.Close
+            Set db = Nothing
+        End If
+    Next file
+    
+    ' クリーンアップ
+    rs.Close
+    Set rs = Nothing
+    Set dbCurrent = Nothing
+    Set fso = Nothing
+    Set folder = Nothing
+    
+    MsgBox "すべてのAccessファイルのテーブル定義がAccessに保存されました。"
+End Sub
+
+' データ型を名前に変換する関数
+Function FieldTypeName(typeCode As Integer) As String
+    Select Case typeCode
+        Case dbBoolean
+            FieldTypeName = "Boolean"
+        Case dbByte
+            FieldTypeName = "Byte"
+        Case dbInteger
+            FieldTypeName = "Integer"
+        Case dbLong
+            FieldTypeName = "Long"
+        Case dbCurrency
+            FieldTypeName = "Currency"
+        Case dbSingle
+            FieldTypeName = "Single"
+        Case dbDouble
+            FieldTypeName = "Double"
+        Case dbDate
+            FieldTypeName = "Date/Time"
+        Case dbText
+            FieldTypeName = "Text"
+        Case dbMemo
+            FieldTypeName = "Memo"
+        Case dbGUID
+            FieldTypeName = "GUID"
+        Case dbBinary
+            FieldTypeName = "Binary"
+        Case dbLongBinary
+            FieldTypeName = "OLE Object"
+        Case dbVarBinary
+            FieldTypeName = "VarBinary"
+        Case dbBigInt
+            FieldTypeName = "BigInt"
+        Case dbNumeric
+            FieldTypeName = "Numeric"
+        Case Else
+            FieldTypeName = "Unknown"
+    End Select
+End Function
