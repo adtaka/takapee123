@@ -1560,3 +1560,6 @@ Function FieldTypeName(typeCode As Integer) As String
             FieldTypeName = "Unknown"
     End Select
 End Function
+
+機密度ラベルのVBAでの直接適用は難しい
+VBAだけで機密度ラベルを適用することは現在のところ難しいですが、Microsoftの他のツールやAPI、Power Automateなどを組み合わせることで、ある程度の自動化や保護が可能です。
