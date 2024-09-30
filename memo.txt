@@ -1649,3 +1649,54 @@ Sub ExportTableWithSheetName()
     MsgBox "テーブルが指定のシート名でエクスポートされました！", vbInformation
 End Sub
 
+
+
+Sub ExportTableToExcel()
+    Dim objExcel As Object
+    Dim objWorkbook As Object
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim strExcelPath As String
+    Dim i As Integer
+
+    ' エクスポートするExcelファイルのパス
+    strExcelPath = "C:\Users\YourUsername\Documents\ExportedData.xlsx"
+    
+    ' Excelアプリケーションを起動
+    Set objExcel = CreateObject("Excel.Application")
+    Set objWorkbook = objExcel.Workbooks.Add
+
+    ' Accessデータベースとテーブルを開く
+    Set db = CurrentDb
+    Set rs = db.OpenRecordset("YourTableName")  ' ここにテーブル名を指定
+    
+    ' フィールド名をExcelに書き込む
+    For i = 0 To rs.Fields.Count - 1
+        objWorkbook.Sheets(1).Cells(1, i + 1).Value = rs.Fields(i).Name
+    Next i
+
+    ' レコードをExcelに書き込む
+    i = 2 ' データの開始行を指定（フィールド名の次の行）
+    Do Until rs.EOF
+        For j = 0 To rs.Fields.Count - 1
+            objWorkbook.Sheets(1).Cells(i, j + 1).Value = rs.Fields(j).Value
+        Next j
+        i = i + 1
+        rs.MoveNext
+    Loop
+
+    ' Excelファイルを保存
+    objWorkbook.SaveAs strExcelPath
+
+    ' Excelを閉じる
+    objWorkbook.Close
+    objExcel.Quit
+
+    ' メモリ解放
+    Set rs = Nothing
+    Set db = Nothing
+    Set objWorkbook = Nothing
+    Set objExcel = Nothing
+    
+    MsgBox "テーブルのデータがExcelにエクスポートされました！", vbInformation
+End Sub
