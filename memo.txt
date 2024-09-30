@@ -1605,3 +1605,15 @@ Officeアプリを開く（Word、Excel、Outlookなど）
 企業内で秘密度ラベルを自動で設定しつつ、手動のラベル選択をユーザーに強制したくない場合、グループポリシー（GPO）を使ってポリシーを制御できます。
 
 Microsoft 365情報保護: 管理者がGPOを使用して、Officeアプリケーションでラベル選択画面の表示を管理します。これにより、ユーザーが手動でラベルを選択するプロセスを省略できる場合があります。
+
+
+
+Sub ExportTableUsingTransferSpreadsheet()
+    Dim strExcelPath As String
+    strExcelPath = "C:\Users\YourUsername\Documents\ExportedData.xlsx"  ' エクスポート先のパス
+
+    ' DoCmd.TransferSpreadsheetを使用して、テーブルをExcelにエクスポート
+    DoCmd.TransferSpreadsheet acExport, acSpreadsheetTypeExcel12Xml, "YourTableName", strExcelPath, True
+
+    MsgBox "テーブルがExcelにエクスポートされました！", vbInformation
+End Sub
