@@ -1773,3 +1773,27 @@ Sub ExportTableToExcel()
     
     MsgBox "データのエクスポートが完了しました！"
 End Sub
+
+
+Sub CreateEmptyExcelFile()
+    Dim ws As Worksheet
+    
+    ' すべてのシートを削除
+    Application.DisplayAlerts = False
+    For Each ws In ThisWorkbook.Worksheets
+        ws.Delete
+    Next ws
+    Application.DisplayAlerts = True
+    
+    ' 空のシートを追加
+    Worksheets.Add
+
+    ' ファイルを保存
+    Dim savePath As String
+    savePath = Application.GetSaveAsFilename(FileFilter:="Excel Files (*.xlsx), *.xlsx")
+    
+    If savePath <> "False" Then
+        ThisWorkbook.SaveAs Filename:=savePath, FileFormat:=xlOpenXMLWorkbook
+    End If
+End Sub
+
