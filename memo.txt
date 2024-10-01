@@ -1989,3 +1989,78 @@ Sub ExportTableToExcel()
     MsgBox "データのエクスポートが完了しました！"
 End Sub
 
+
+Sub FastExportTableToExcel()
+    ' 変数の宣言
+    Dim xlApp As Object
+    Dim xlBook As Object
+    Dim xlSheet As Object
+    Dim rs As DAO.Recordset
+    Dim i As Integer, j As Integer
+    Dim filePath As String
+    Dim tableName As String
+    Dim dataArray() As Variant
+    Dim fieldCount As Integer
+    Dim rowCount As Integer
+    
+    ' Excelファイルのパス
+    filePath = "C:\path\to\your\file.xlsx"  ' 既存のExcelファイルのパスに置き換える
+    ' エクスポートするAccessのテーブル名
+    tableName = "YourTableName"  ' テーブル名を指定
+    
+    ' Excelアプリケーションを起動
+    Set xlApp = CreateObject("Excel.Application")
+    ' 既存のExcelブックを開く
+    Set xlBook = xlApp.Workbooks.Open(filePath)
+    ' 新しいシートを追加
+    Set xlSheet = xlBook.Sheets.Add
+    xlSheet.Name = "AccessData"  ' シート名を変更（必要に応じて）
+
+    ' レコードセットを取得
+    Set rs = CurrentDb.OpenRecordset(tableName)
+    
+    ' フィールド数とレコード数を取得
+    fieldCount = rs.Fields.Count
+    rs.MoveLast
+    rowCount = rs.RecordCount
+    rs.MoveFirst
+    
+    ' データを配列に格納（フィールド名を含む）
+    ReDim dataArray(0 To rowCount, 0 To fieldCount - 1)
+    
+    ' フィールド名を配列の最初の行に格納
+    For i = 0 To fieldCount - 1
+        dataArray(0, i) = rs.Fields(i).Name
+    Next i
+    
+    ' データを配列に格納
+    i = 1 ' 配列の2行目からデータを入れる
+    Do While Not rs.EOF
+        For j = 0 To fieldCount - 1
+            dataArray(i, j) = rs.Fields(j).Value
+        Next j
+        rs.MoveNext
+        i = i + 1
+    Loop
+    
+    ' Excelの更新を停止して速度を向上
+    xlApp.ScreenUpdating = False
+    
+    ' 配列を一括でExcelに書き込む
+    xlSheet.Range(xlSheet.Cells(1, 1), xlSheet.Cells(rowCount + 1, fieldCount)).Value = dataArray
+    
+    ' Excelファイルを保存して閉じる
+    xlBook.Save
+    xlBook.Close
+    xlApp.ScreenUpdating = True
+    xlApp.Quit
+    
+    ' オブジェクトの解放
+    Set rs = Nothing
+    Set xlSheet = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+    
+    MsgBox "データのエクスポートが完了しました！"
+End Sub
+
