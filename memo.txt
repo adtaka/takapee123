@@ -1833,3 +1833,65 @@ Sub RemoveSheetsFromExistingFile()
     MsgBox "すべてのシートを削除し、空のシートで保存しました。"
 End Sub
 
+
+
+Sub RemoveSheetsFromExcel()
+    Dim xlApp As Object
+    Dim xlBook As Object
+    Dim xlSheet As Object
+    Dim filePath As String
+    
+    ' Excelアプリケーションを起動
+    On Error Resume Next
+    Set xlApp = CreateObject("Excel.Application")
+    On Error GoTo 0
+    
+    If xlApp Is Nothing Then
+        MsgBox "Excelがインストールされていません。"
+        Exit Sub
+    End If
+    
+    ' Excelを表示しない（バックグラウンドで動作）
+    xlApp.Visible = False
+    
+    ' ファイルを選択するダイアログを表示
+    filePath = Application.FileDialog(3).Show
+    
+    ' ファイルが選択されていない場合は終了
+    If filePath = 0 Then
+        MsgBox "ファイルが選択されませんでした。"
+        xlApp.Quit
+        Set xlApp = Nothing
+        Exit Sub
+    End If
+    
+    ' 選択したExcelファイルを開く
+    Set xlBook = xlApp.Workbooks.Open(Application.FileDialog(3).SelectedItems(1))
+    
+    ' すべてのシートを削除（少なくとも1枚はシートが残る）
+    xlApp.DisplayAlerts = False
+    For Each xlSheet In xlBook.Worksheets
+        xlSheet.Delete
+    Next xlSheet
+    xlApp.DisplayAlerts = True
+    
+    ' 空のシートを追加
+    xlBook.Worksheets.Add
+    
+    ' 上書き保存
+    xlBook.Save
+    
+    ' ファイルを閉じる
+    xlBook.Close
+    
+    ' Excelを終了
+    xlApp.Quit
+    
+    ' オブジェクトを解放
+    Set xlSheet = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+    
+    MsgBox "Excelファイルのシートを削除し、空のシートで保存しました。"
+End Sub
+
