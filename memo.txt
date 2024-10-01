@@ -1895,3 +1895,21 @@ Sub RemoveSheetsFromExcel()
     MsgBox "Excelファイルのシートを削除し、空のシートで保存しました。"
 End Sub
 
+
+
+
+Sub ファイルコピー()
+    Dim 元ファイル As String
+    Dim コピー先 As String
+    
+    ' 元のファイルのパスを指定
+    元ファイル = "C:\Users\YourName\Documents\元のファイル.xlsx"
+    
+    ' コピー先のファイルのパスを指定
+    コピー先 = "C:\Users\YourName\Documents\コピーされたファイル.xlsx"
+    
+    ' ファイルをコピー
+    FileCopy 元ファイル, コピー先
+    
+    MsgBox "ファイルのコピーが完了しました！"
+End Sub
