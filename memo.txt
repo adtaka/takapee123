@@ -1717,3 +1717,59 @@ Sub RunModuleFromAnotherDatabase()
     accApp.Quit
     Set accApp = Nothing
 End Sub
+
+
+Sub ExportTableToExcel()
+    ' 変数の宣言
+    Dim xlApp As Object
+    Dim xlBook As Object
+    Dim xlSheet As Object
+    Dim rs As DAO.Recordset
+    Dim i As Integer
+    Dim filePath As String
+    Dim tableName As String
+    
+    ' Excelファイルのパス
+    filePath = "C:\path\to\your\file.xlsx"  ' 既存のExcelファイルのパスに置き換える
+    ' エクスポートするAccessのテーブル名
+    tableName = "YourTableName"  ' テーブル名を指定
+    
+    ' Excelアプリケーションを起動
+    Set xlApp = CreateObject("Excel.Application")
+    ' 既存のExcelブックを開く
+    Set xlBook = xlApp.Workbooks.Open(filePath)
+    ' 新しいシートを追加
+    Set xlSheet = xlBook.Sheets.Add
+    xlSheet.Name = "AccessData"  ' シート名を変更（必要に応じて）
+    
+    ' レコードセットを取得
+    Set rs = CurrentDb.OpenRecordset(tableName)
+    
+    ' フィールド名をExcelの1行目に書き込む
+    For i = 0 To rs.Fields.Count - 1
+        xlSheet.Cells(1, i + 1).Value = rs.Fields(i).Name
+    Next i
+    
+    ' レコードセットのデータをExcelに書き込む
+    i = 2  ' 2行目からデータを書き込む
+    Do While Not rs.EOF
+        For j = 0 To rs.Fields.Count - 1
+            xlSheet.Cells(i, j + 1).Value = rs.Fields(j).Value
+        Next j
+        rs.MoveNext
+        i = i + 1
+    Loop
+    
+    ' Excelファイルを保存して閉じる
+    xlBook.Save
+    xlBook.Close
+    xlApp.Quit
+    
+    ' オブジェクトの解放
+    Set rs = Nothing
+    Set xlSheet = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+    
+    MsgBox "データのエクスポートが完了しました！"
+End Sub
