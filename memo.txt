@@ -1913,3 +1913,23 @@ Sub ファイルコピー()
     
     MsgBox "ファイルのコピーが完了しました！"
 End Sub
+
+Sub AddSheetWithName()
+    Dim sheetName As String
+    sheetName = InputBox("新しいシートの名前を入力してください:", "シートの追加")
+    
+    ' シートが既に存在するか確認
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets(sheetName)
+    On Error GoTo 0
+    
+    If Not ws Is Nothing Then
+        MsgBox "シート '" & sheetName & "' は既に存在します。"
+    Else
+        ' 新しいシートを作成し、指定した名前を設定
+        ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count)).Name = sheetName
+        MsgBox "新しいシート '" & sheetName & "' が追加されました。"
+    End If
+End Sub
+
