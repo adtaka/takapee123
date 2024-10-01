@@ -1700,3 +1700,20 @@ Sub ExportTableToExcel()
     
     MsgBox "テーブルのデータがExcelにエクスポートされました！", vbInformation
 End Sub
+
+
+Sub RunModuleFromAnotherDatabase()
+    ' 別のAccessデータベースファイルを開く
+    Dim accApp As Object
+    Set accApp = CreateObject("Access.Application")
+    
+    ' 別のAccessファイルのパス
+    accApp.OpenCurrentDatabase "C:\Path\To\AnotherDatabase.accdb"
+    
+    ' モジュールの関数を実行
+    accApp.Run "ModuleName.FunctionName"
+    
+    ' データベースを閉じる
+    accApp.Quit
+    Set accApp = Nothing
+End Sub
