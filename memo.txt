@@ -1797,3 +1797,39 @@ Sub CreateEmptyExcelFile()
     End If
 End Sub
 
+
+Sub RemoveSheetsFromExistingFile()
+    Dim ws As Worksheet
+    Dim wb As Workbook
+    Dim filePath As String
+    
+    ' ファイルを選択して開くダイアログ
+    filePath = Application.GetOpenFilename(FileFilter:="Excel Files (*.xlsx), *.xlsx")
+    
+    If filePath = "False" Then
+        MsgBox "ファイルが選択されませんでした。"
+        Exit Sub
+    End If
+    
+    ' 選択したファイルを開く
+    Set wb = Workbooks.Open(filePath)
+    
+    ' すべてのシートを削除（少なくとも1枚はシートが残る）
+    Application.DisplayAlerts = False
+    For Each ws In wb.Worksheets
+        ws.Delete
+    Next ws
+    Application.DisplayAlerts = True
+    
+    ' 空のシートを追加
+    wb.Worksheets.Add
+    
+    ' 上書き保存
+    wb.Save
+    
+    ' ブックを閉じる
+    wb.Close
+    
+    MsgBox "すべてのシートを削除し、空のシートで保存しました。"
+End Sub
+
