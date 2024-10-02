@@ -2064,3 +2064,53 @@ Sub FastExportTableToExcel()
     MsgBox "データのエクスポートが完了しました！"
 End Sub
 
+
+Sub GetDataFromTextFileUsingFSO()
+    Dim fso As Object
+    Dim ts As Object
+    Dim FilePath As String
+    Dim LineNumber As Long
+    Dim StartChar As Long
+    Dim CharLength As Long
+    Dim LineContent As String
+    Dim Result As String
+    Dim CurrentLine As Long
+    
+    ' FilePathにテキストファイルのパスを設定
+    FilePath = "C:\path\to\your\file.txt" ' 適切なファイルパスに変更してください
+    
+    LineNumber = 3   ' 取得したい行番号
+    StartChar = 5    ' 開始桁位置
+    CharLength = 10  ' 取得する文字数
+    
+    ' FileSystemObjectを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' テキストファイルを読み込みモードで開く
+    Set ts = fso.OpenTextFile(FilePath, 1) ' 1は読み取り専用モード
+    
+    ' 指定された行に到達するまでループ
+    CurrentLine = 0
+    Do While Not ts.AtEndOfStream
+        CurrentLine = CurrentLine + 1
+        LineContent = ts.ReadLine
+        
+        If CurrentLine = LineNumber Then
+            ' 指定桁から指定文字数分を取得
+            If Len(LineContent) >= StartChar + CharLength - 1 Then
+                Result = Mid(LineContent, StartChar, CharLength)
+            Else
+                MsgBox "指定された桁数の情報が行内に収まりません。"
+                Exit Sub
+            End If
+            Exit Do
+        End If
+    Loop
+    
+    ' テキストストリームを閉じる
+    ts.Close
+    
+    ' 結果を表示
+    MsgBox "取得結果: " & Result
+End Sub
+
