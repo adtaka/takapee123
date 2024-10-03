@@ -2152,3 +2152,30 @@ Sub SaveAllModules()
         End If
     Next obj
 End Sub
+
+
+Sub CopyFolder()
+    Dim fso As Object
+    Dim sourceFolder As String
+    Dim destinationFolder As String
+
+    ' FileSystemObject を作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    ' コピー元フォルダのパス
+    sourceFolder = "C:\Path\To\SourceFolder"  ' コピー元フォルダのパスを指定
+
+    ' コピー先フォルダのパス
+    destinationFolder = "C:\Path\To\DestinationFolder"  ' コピー先フォルダのパスを指定
+
+    ' フォルダをコピー
+    If fso.FolderExists(sourceFolder) Then
+        fso.CopyFolder sourceFolder, destinationFolder
+        MsgBox "フォルダのコピーが完了しました！"
+    Else
+        MsgBox "指定されたフォルダが見つかりません。"
+    End If
+
+    ' オブジェクトの解放
+    Set fso = Nothing
+End Sub
