@@ -2137,3 +2137,18 @@ Sub SaveAllModules()
     Next obj
 End Sub
 
+
+
+Const vbext_ct_StdModule As Integer = 1
+Const vbext_ct_ClassModule As Integer = 2
+
+Sub SaveAllModules()
+    Dim obj As Object
+    ' 全てのVBAプロジェクトアイテムをループ
+    For Each obj In Application.VBE.VBProjects(1).VBComponents
+        ' コードモジュールの場合のみ保存
+        If obj.Type = vbext_ct_StdModule Or obj.Type = vbext_ct_ClassModule Then
+            obj.Save
+        End If
+    Next obj
+End Sub
