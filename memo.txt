@@ -2114,3 +2114,26 @@ Sub GetDataFromTextFileUsingFSO()
     MsgBox "取得結果: " & Result
 End Sub
 
+
+
+Private Sub Form_Load()
+    ' タイマー間隔を1分（60,000ミリ秒）に設定
+    Me.TimerInterval = 60000
+End Sub
+
+Private Sub Form_Timer()
+    ' SaveAllModulesサブルーチンを呼び出してモジュールを保存
+    Call SaveAllModules
+End Sub
+
+Sub SaveAllModules()
+    Dim obj As Object
+    ' 全てのVBAプロジェクトアイテムをループ
+    For Each obj In Application.VBE.VBProjects(1).VBComponents
+        ' コードモジュールの場合のみ保存
+        If obj.Type = vbext_ct_StdModule Or obj.Type = vbext_ct_ClassModule Then
+            obj.Save
+        End If
+    Next obj
+End Sub
+
