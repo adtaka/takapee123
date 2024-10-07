@@ -2212,3 +2212,72 @@ Sub RunUpdateQueryWithCheck()
 ErrorHandler:
     MsgBox "エラーが発生しました: " & Err.Description, vbCritical
 End Sub
+
+
+
+エクセルファイル
+列名        データ型
+------------------
+ID          Long
+Name        Text(50)
+Birthdate   Date
+Salary      Currency
+
+
+
+Sub CreateTableFromExcel()
+    Dim xlApp As Object
+    Dim xlWbk As Object
+    Dim xlSht As Object
+    Dim db As DAO.Database
+    Dim strTableName As String
+    Dim strSQL As String
+    Dim i As Integer
+    Dim strFieldName As String
+    Dim strFieldType As String
+
+    ' Excelファイルを開く
+    Set xlApp = CreateObject("Excel.Application")
+    Set xlWbk = xlApp.Workbooks.Open("C:\Path\To\Your\ExcelFile.xlsx") ' Excelファイルのパスを指定
+    Set xlSht = xlWbk.Sheets("Sheet1") ' シート名を指定
+
+    ' テーブル名を設定
+    strTableName = "NewTable"
+
+    ' テーブル作成SQLの開始
+    strSQL = "CREATE TABLE " & strTableName & " ("
+
+    ' Excelの定義を取得（1行目が列名、2行目がデータ型と仮定）
+    i = 2
+    Do While xlSht.Cells(i, 1).Value <> ""
+        strFieldName = xlSht.Cells(i, 1).Value
+        strFieldType = xlSht.Cells(i, 2).Value
+
+        ' フィールドをSQLに追加
+        strSQL = strSQL & "[" & strFieldName & "] " & strFieldType & ", "
+        i = i + 1
+    Loop
+
+    ' 最後のカンマを削除してSQLを完成させる
+    strSQL = Left(strSQL, Len(strSQL) - 2) & ");"
+
+    ' Accessのデータベースを開く
+    Set db = CurrentDb()
+
+    ' SQL文を実行してテーブルを作成
+    db.Execute strSQL
+
+    ' Excelを閉じる
+    xlWbk.Close False
+    xlApp.Quit
+
+    ' オブジェクトを解放
+    Set xlSht = Nothing
+    Set xlWbk = Nothing
+    Set xlApp = Nothing
+    Set db = Nothing
+
+    MsgBox "テーブルが作成されました: " & strTableName
+End Sub
+
+
