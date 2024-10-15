@@ -2389,3 +2389,32 @@ Sub ProcessAccessFile(ByVal filePath As String, ByRef accApp As Object, ByRef ws
     Next vbComp
 End Sub
 
+
+
+Sub SaveFormListToTable()
+    Dim db As DAO.Database
+    Dim rst As DAO.Recordset
+    Dim obj As AccessObject
+    Dim frm As AccessObject
+    
+    ' データベースを開く
+    Set db = CurrentDb()
+    
+    ' テーブル「フォーム一覧」のレコードセットを開く
+    Set rst = db.OpenRecordset("フォーム一覧", dbOpenDynaset)
+    
+    ' すべてのフォームをループして、テーブルに追加
+    For Each obj In CurrentProject.AllForms
+        rst.AddNew
+        rst!FormName = obj.Name
+        rst!DateCreated = Now ' 作成日を現在の日付で設定（任意）
+        rst.Update
+    Next obj
+    
+    ' レコードセットを閉じる
+    rst.Close
+    Set rst = Nothing
+    Set db = Nothing
+End Sub
+
+
