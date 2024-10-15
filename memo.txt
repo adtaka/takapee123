@@ -2417,4 +2417,31 @@ Sub SaveFormListToTable()
     Set db = Nothing
 End Sub
 
+Sub RenameAllForms()
+    Dim accObj As AccessObject
+    Dim oldName As String
+    Dim newName As String
+    Dim i As Integer
+    
+    ' すべてのフォームを繰り返し処理
+    For i = CurrentProject.AllForms.Count - 1 To 0 Step -1
+        Set accObj = CurrentProject.AllForms(i)
+        oldName = accObj.Name
+        
+        ' すでに「frm」が付いていないか確認
+        If Left(oldName, 3) <> "frm" Then
+            newName = "frm" & oldName
+            
+            ' フォームが開いていれば閉じる
+            If accObj.IsLoaded Then
+                DoCmd.Close acForm, oldName, acSaveYes
+            End If
+            
+            ' フォーム名を変更
+            DoCmd.Rename newName, acForm, oldName
+        End If
+    Next i
+End Sub
+
+
 
