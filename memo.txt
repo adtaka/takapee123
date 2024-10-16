@@ -2444,4 +2444,76 @@ Sub RenameAllForms()
 End Sub
 
 
+2024/10/16 15:06:36
+Sub ExportAccessModulesToTableRecursive()
+    Dim accApp As Object
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim row As Integer
+
+    ' テーブルに接続
+    Set db = CurrentDb
+    Set rs = db.OpenRecordset("ModuleRoutines", dbOpenDynaset) ' ModuleRoutinesはテーブル名
+    
+    ' Access アプリケーションの準備
+    Set accApp = CreateObject("Access.Application")
+    
+    ' フォルダを再帰的に探索してAccessファイルを処理
+    Dim folderPath As String
+    folderPath = "C:\path\to\your\access\files\" ' フォルダのパス
+    ProcessFolderToTable folderPath, accApp, rs
+    
+    ' クリーンアップ
+    accApp.Quit
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+    Set accApp = Nothing
+End Sub
+
+' フォルダを再帰的に探索してAccessファイルを処理するサブルーチン
+Sub ProcessFolderToTable(ByVal folderPath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+    Dim fileName As String
+    Dim subFolder As String
+    
+    ' Accessファイルを処理
+    fileName = Dir(folderPath & "*.accdb") ' .accdbファイルを探す
+    Do While fileName <> ""
+        ProcessAccessFileToTable folderPath & fileName, accApp, rs
+        fileName = Dir
+    Loop
+    
+    fileName = Dir(folderPath & "*.mdb") ' .mdbファイルを探す
+    Do While fileName <> ""
+        ProcessAccessFileToTable folderPath & fileName, accApp, rs
+        fileName = Dir
+    Loop
+    
+    ' サブフォルダを再帰的に探索
+    subFolder = Dir(folderPath & "*", vbDirectory)
+    Do While subFolder <> ""
+        If subFolder <> "." And subFolder <> ".." Then
+            If (GetAttr(folderPath & subFolder) And vbDirectory) = vbDirectory Then
+                ProcessFolderToTable folderPath & subFolder & "\", accApp, rs
+            End If
+        End If
+        subFolder = Dir
+    Loop
+End Sub
+
+' Accessファイルを開いてサブルーチンと関数をテーブルに出力するサブルーチン
+Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+    Dim vbComp As Object
+    Dim codeModule As Object
+
+    ' Accessファイルを開く
+    accApp.OpenCurrentDatabase filePath
+    
+    ' モジュールをループしてサブルーチンと関数を取得
+    For Each vbComp In accApp.VBE.VBProjects(1).VBComponents
+        Set codeModule = vbComp.CodeModule
+        If codeModule.CountOfLines > 0 Then
+            ' モジュール内の各プロシージャを調べる
+
+
 
