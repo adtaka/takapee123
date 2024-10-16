@@ -2445,6 +2445,18 @@ End Sub
 
 
 2024/10/16 15:06:36
+
+テーブルの作成
+Accessのデータベースで新しいテーブルを作成します。
+以下のフィールドを追加します。
+ID: オートナンバー
+FileName: テキスト型（Accessファイル名）
+ModuleName: テキスト型（モジュール名）
+Type: テキスト型（"Sub" または "Function"）
+RoutineName: テキスト型（サブルーチン名または関数名）
+テーブル名を「ModuleRoutines」とします。（必要に応じて変更できますが、VBAコード内でその名前に合わせて修正する必要があります。）
+
+
 Sub ExportAccessModulesToTableRecursive()
     Dim accApp As Object
     Dim db As DAO.Database
