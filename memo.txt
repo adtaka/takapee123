@@ -2514,6 +2514,39 @@ Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, B
         Set codeModule = vbComp.CodeModule
         If codeModule.CountOfLines > 0 Then
             ' モジュール内の各プロシージャを調べる
+            Dim lineNum As Long
+            For lineNum = 1 To codeModule.CountOfLines
+                ' Subプロシージャを探す
+                If InStr(1, codeModule.Lines(lineNum, 1), "Sub ") > 0 Then
+                    Dim subName As String
+                    subName = Mid(codeModule.Lines(lineNum, 1), 5, InStr(5, codeModule.Lines(lineNum, 1), "(") - 5)
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Sub"
+                    rs!RoutineName = subName
+                    rs.Update
+                End If
+                
+                ' Functionプロシージャを探す
+                If InStr(1, codeModule.Lines(lineNum, 1), "Function ") > 0 Then
+                    Dim funcName As String
+                    funcName = Mid(codeModule.Lines(lineNum, 1), 10, InStr(10, codeModule.Lines(lineNum, 1), "(") - 10)
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Function"
+                    rs!RoutineName = funcName
+                    rs.Update
+                End If
+            Next lineNum
+        End If
+    Next vbComp
+End Sub
 
 
 
