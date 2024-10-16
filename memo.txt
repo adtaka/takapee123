@@ -2562,3 +2562,109 @@ End Sub
 
 
 
+Sub ExportAccessModulesToTableRecursive()
+    Dim accApp As Object
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+
+    ' テーブルに接続
+    Set db = CurrentDb
+    Set rs = db.OpenRecordset("ModuleRoutines", dbOpenDynaset) ' ModuleRoutinesはテーブル名
+    
+    ' Access アプリケーションの準備
+    Set accApp = CreateObject("Access.Application")
+    
+    ' フォルダを再帰的に探索してAccessファイルを処理
+    Dim folderPath As String
+    folderPath = "C:\path\to\your\access\files\" ' フォルダのパス
+    ProcessFolderToTable folderPath, accApp, rs
+    
+    ' クリーンアップ
+    accApp.Quit
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+    Set accApp = Nothing
+End Sub
+
+' フォルダを再帰的に探索してAccessファイルを処理するサブルーチン
+Sub ProcessFolderToTable(ByVal folderPath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+    Dim fileName As String
+    Dim subFolder As String
+
+    ' Accessファイルを処理
+    fileName = Dir(folderPath & "*.accdb") ' .accdbファイルを探す
+    Do While fileName <> ""
+        ProcessAccessFileToTable folderPath & fileName, accApp, rs
+        fileName = Dir
+    Loop
+    
+    fileName = Dir(folderPath & "*.mdb") ' .mdbファイルを探す
+    Do While fileName <> ""
+        ProcessAccessFileToTable folderPath & fileName, accApp, rs
+        fileName = Dir
+    Loop
+    
+    ' サブフォルダを再帰的に探索
+    subFolder = Dir(folderPath, vbDirectory) ' 最初のDir呼び出しでフォルダ探索開始
+    Do While subFolder <> ""
+        ' "." や ".." ではないかをチェック
+        If subFolder <> "." And subFolder <> ".." Then
+            ' サブフォルダかどうかをチェック
+            If (GetAttr(folderPath & subFolder) And vbDirectory) = vbDirectory Then
+                ' 再帰的にサブフォルダを処理
+                ProcessFolderToTable folderPath & subFolder & "\", accApp, rs
+            End If
+        End If
+        subFolder = Dir ' 次のサブフォルダを取得
+    Loop
+End Sub
+
+' Accessファイルを開いてサブルーチンと関数をテーブルに出力するサブルーチン
+Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+    Dim vbComp As Object
+    Dim codeModule As Object
+
+    ' Accessファイルを開く
+    accApp.OpenCurrentDatabase filePath
+    
+    ' モジュールをループしてサブルーチンと関数を取得
+    For Each vbComp In accApp.VBE.VBProjects(1).VBComponents
+        Set codeModule = vbComp.CodeModule
+        If codeModule.CountOfLines > 0 Then
+            ' モジュール内の各プロシージャを調べる
+            Dim lineNum As Long
+            For lineNum = 1 To codeModule.CountOfLines
+                ' Subプロシージャを探す
+                If InStr(1, codeModule.Lines(lineNum, 1), "Sub ") > 0 Then
+                    Dim subName As String
+                    subName = Mid(codeModule.Lines(lineNum, 1), 5, InStr(5, codeModule.Lines(lineNum, 1), "(") - 5)
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Sub"
+                    rs!RoutineName = subName
+                    rs.Update
+                End If
+                
+                ' Functionプロシージャを探す
+                If InStr(1, codeModule.Lines(lineNum, 1), "Function ") > 0 Then
+                    Dim funcName As String
+                    funcName = Mid(codeModule.Lines(lineNum, 1), 10, InStr(10, codeModule.Lines(lineNum, 1), "(") - 10)
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Function"
+                    rs!RoutineName = funcName
+                    rs.Update
+                End If
+            Next lineNum
+        End If
+    Next vbComp
+End Sub
+
+
