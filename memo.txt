@@ -2668,3 +2668,102 @@ Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, B
 End Sub
 
 
+20241017
+------------
+Sub ExportAccessModulesToTableWithFSO()
+    Dim accApp As Object
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim fso As Object
+    Dim folderPath As String
+
+    ' FileSystemObjectの作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    ' テーブルに接続
+    Set db = CurrentDb
+    Set rs = db.OpenRecordset("ModuleRoutines", dbOpenDynaset) ' ModuleRoutinesはテーブル名
+    
+    ' Access アプリケーションの準備
+    Set accApp = CreateObject("Access.Application")
+    
+    ' フォルダのパスを設定
+    folderPath = "C:\path\to\your\access\files\" ' フォルダのパス
+    
+    ' フォルダを再帰的に探索してAccessファイルを処理
+    ProcessFolderWithFSO fso.GetFolder(folderPath), accApp, rs
+
+    ' クリーンアップ
+    accApp.Quit
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+    Set accApp = Nothing
+End Sub
+
+' FileSystemObjectを使用してフォルダを再帰的に探索するサブルーチン
+Sub ProcessFolderWithFSO(ByVal folder As Object, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+    Dim file As Object
+    Dim subFolder As Object
+
+    ' Accessファイルを処理
+    For Each file In folder.Files
+        If Right(file.Name, 6) = ".accdb" Or Right(file.Name, 4) = ".mdb" Then
+            ProcessAccessFileToTable file.Path, accApp, rs
+        End If
+    Next file
+
+    ' サブフォルダを再帰的に探索
+    For Each subFolder In folder.SubFolders
+        ProcessFolderWithFSO subFolder, accApp, rs
+    Next subFolder
+End Sub
+
+' Accessファイルを開いてサブルーチンと関数をテーブルに出力するサブルーチン
+Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+    Dim vbComp As Object
+    Dim codeModule As Object
+
+    ' Accessファイルを開く
+    accApp.OpenCurrentDatabase filePath
+    
+    ' モジュールをループしてサブルーチンと関数を取得
+    For Each vbComp In accApp.VBE.VBProjects(1).VBComponents
+        Set codeModule = vbComp.CodeModule
+        If codeModule.CountOfLines > 0 Then
+            ' モジュール内の各プロシージャを調べる
+            Dim lineNum As Long
+            For lineNum = 1 To codeModule.CountOfLines
+                ' Subプロシージャを探す
+                If InStr(1, codeModule.Lines(lineNum, 1), "Sub ") > 0 Then
+                    Dim subName As String
+                    subName = Mid(codeModule.Lines(lineNum, 1), 5, InStr(5, codeModule.Lines(lineNum, 1), "(") - 5)
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Sub"
+                    rs!RoutineName = subName
+                    rs.Update
+                End If
+                
+                ' Functionプロシージャを探す
+                If InStr(1, codeModule.Lines(lineNum, 1), "Function ") > 0 Then
+                    Dim funcName As String
+                    funcName = Mid(codeModule.Lines(lineNum, 1), 10, InStr(10, codeModule.Lines(lineNum, 1), "(") - 10)
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Function"
+                    rs!RoutineName = funcName
+                    rs.Update
+                End If
+            Next lineNum
+        End If
+    Next vbComp
+End Sub
+
+
