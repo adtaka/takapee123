@@ -2670,7 +2670,7 @@ End Sub
 
 20241017
 ------------
-Sub ExportAccessModulesToTableWithFSO()
+Sub subExportAccessModulesToTableWithFso()
     Dim accApp As Object
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -2691,7 +2691,7 @@ Sub ExportAccessModulesToTableWithFSO()
     folderPath = "C:\path\to\your\access\files\" ' フォルダのパス
     
     ' フォルダを再帰的に探索してAccessファイルを処理
-    ProcessFolderWithFSO fso.GetFolder(folderPath), accApp, rs
+    subProcessFolderWithFso fso.GetFolder(folderPath), accApp, rs
 
     ' クリーンアップ
     accApp.Quit
@@ -2702,25 +2702,25 @@ Sub ExportAccessModulesToTableWithFSO()
 End Sub
 
 ' FileSystemObjectを使用してフォルダを再帰的に探索するサブルーチン
-Sub ProcessFolderWithFSO(ByVal folder As Object, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+Sub subProcessFolderWithFso(ByVal folder As Object, ByRef accApp As Object, ByRef rs As DAO.Recordset)
     Dim file As Object
     Dim subFolder As Object
 
     ' Accessファイルを処理
     For Each file In folder.Files
         If Right(file.Name, 6) = ".accdb" Or Right(file.Name, 4) = ".mdb" Then
-            ProcessAccessFileToTable file.Path, accApp, rs
+            subProcessAccessFileToTable file.Path, accApp, rs
         End If
     Next file
 
     ' サブフォルダを再帰的に探索
     For Each subFolder In folder.SubFolders
-        ProcessFolderWithFSO subFolder, accApp, rs
+        subProcessFolderWithFso subFolder, accApp, rs
     Next subFolder
 End Sub
 
 ' Accessファイルを開いてサブルーチンと関数をテーブルに出力するサブルーチン
-Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+Sub subProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
     Dim vbComp As Object
     Dim codeModule As Object
 
@@ -2750,15 +2750,15 @@ Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, B
                 
                 ' Functionプロシージャを探す
                 If InStr(1, codeModule.Lines(lineNum, 1), "Function ") > 0 Then
-                    Dim funcName As String
-                    funcName = Mid(codeModule.Lines(lineNum, 1), 10, InStr(10, codeModule.Lines(lineNum, 1), "(") - 10)
+                    Dim fncName As String
+                    fncName = Mid(codeModule.Lines(lineNum, 1), 10, InStr(10, codeModule.Lines(lineNum, 1), "(") - 10)
                     
                     ' レコードをテーブルに追加
                     rs.AddNew
                     rs!FileName = filePath
                     rs!ModuleName = vbComp.Name
                     rs!Type = "Function"
-                    rs!RoutineName = funcName
+                    rs!RoutineName = fncName
                     rs.Update
                 End If
             Next lineNum
