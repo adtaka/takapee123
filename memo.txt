@@ -2817,3 +2817,34 @@ sub openExternalFormAndKeepOpen()
     Set objAccess = Nothing
 end sub
 
+
+sub openExternalAccessAndMonitor()
+    ' 外部Accessファイルのパス
+    Dim strExternalDbPath As String
+    strExternalDbPath = "C:\path\to\your\external\database.accdb"
+    
+    ' Access Applicationオブジェクトの作成
+    Dim objAccess As Object
+    Set objAccess = CreateObject("Access.Application")
+    
+    ' 外部ファイルを開く
+    objAccess.OpenCurrentDatabase strExternalDbPath
+    
+    ' Accessアプリケーションを表示
+    objAccess.Visible = True
+    
+    ' Accessファイルが閉じられるまで監視
+    Do While Not objAccess Is Nothing
+        On Error Resume Next
+        ' Accessアプリケーションが閉じられたか確認
+        If objAccess.CurrentProject Is Nothing Then
+            Exit Do ' Accessが閉じられた
+        End If
+        On Error GoTo 0
+        DoEvents ' 他の操作を受け付けるために必要
+    Loop
+    
+    ' オブジェクトの解放
+    Set objAccess = Nothing
+end sub
+
