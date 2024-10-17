@@ -2902,3 +2902,85 @@ Sub subGetFilteredRecordSet()
 End Sub
 
 
+
+
+
+Sub ProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object, ByRef rs As DAO.Recordset)
+    Dim vbComp As Object
+    Dim codeModule As Object
+
+    ' 既にデータベースが開かれている場合は閉じる
+    If accApp.CurrentDb Is Nothing = False Then
+        accApp.CloseCurrentDatabase
+    End If
+
+    ' Accessファイルを開く
+    accApp.OpenCurrentDatabase filePath
+    
+    ' モジュールをループしてサブルーチンと関数を取得
+    For Each vbComp In accApp.VBE.VBProjects(1).VBComponents
+        Set codeModule = vbComp.CodeModule
+        If codeModule.CountOfLines > 0 Then
+            ' モジュール内の各プロシージャを調べる
+            Dim lineNum As Long
+            For lineNum = 1 To codeModule.CountOfLines
+                Dim currentLine As String
+                currentLine = Trim(codeModule.Lines(lineNum, 1))
+
+                ' Subプロシージャを探す
+                If InStr(1, currentLine, "Sub ") > 0 Then
+                    Dim subName As String
+                    subName = ExtractRoutineName(currentLine, "Sub")
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Sub"
+                    rs!RoutineName = subName
+                    rs.Update
+                End If
+                
+                ' Functionプロシージャを探す
+                If InStr(1, currentLine, "Function ") > 0 Then
+                    Dim funcName As String
+                    funcName = ExtractRoutineName(currentLine, "Function")
+                    
+                    ' レコードをテーブルに追加
+                    rs.AddNew
+                    rs!FileName = filePath
+                    rs!ModuleName = vbComp.Name
+                    rs!Type = "Function"
+                    rs!RoutineName = funcName
+                    rs.Update
+                End If
+            Next lineNum
+        End If
+    Next vbComp
+End Sub
+
+' Sub または Function 名を抽出するための関数
+Function ExtractRoutineName(ByVal codeLine As String, ByVal routineType As String) As String
+    Dim nameStart As Long
+    Dim nameEnd As Long
+    Dim routineName As String
+    
+    ' サブルーチンや関数名の開始位置を決定 (Sub または Function の後)
+    nameStart = InStr(1, codeLine, routineType) + Len(routineType) + 1 ' Sub/Functionの後にあるスペースを考慮
+    
+    ' 開始括弧 "(" の前までを取得
+    nameEnd = InStr(nameStart, codeLine, "(")
+    
+    ' サブルーチン/関数名を抽出
+    If nameEnd > 0 Then
+        routineName = Trim(Mid(codeLine, nameStart, nameEnd - nameStart))
+    Else
+        ' "(" がない場合、行全体を切り取る
+        routineName = Trim(Mid(codeLine, nameStart))
+    End If
+    
+    ExtractRoutineName = routineName
+End Function
+
+
+
