@@ -2848,3 +2848,23 @@ sub openExternalAccessAndMonitor()
     Set objAccess = Nothing
 end sub
 
+
+
+
+Sub runExternalSub()
+    Dim accApp As Access.Application
+    Set accApp = New Access.Application
+    
+    ' 外部のデータベースファイルを開く
+    accApp.OpenCurrentDatabase "C:\path\to\ExternalDB.accdb"
+    
+    ' 外部データベース内のサブルーチンを実行
+    accApp.Run "subExternalRoutine"
+    
+    ' データベースを閉じる
+    accApp.CloseCurrentDatabase
+    Set accApp = Nothing
+End Sub
+
+
+
