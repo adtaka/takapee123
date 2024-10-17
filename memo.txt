@@ -2868,3 +2868,37 @@ End Sub
 
 
 
+Sub subGetFilteredRecordSet()
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim strSql As String
+    Dim strCondition As String
+
+    ' データベースへの参照を取得
+    Set db = CurrentDb
+    
+    ' 抽出条件を指定 (例: IDが100以上)
+    strCondition = "WHERE ID >= 100"
+    
+    ' SQL文の作成
+    strSql = "SELECT * FROM YourTableName " & strCondition
+    
+    ' レコードセットを取得
+    Set rs = db.OpenRecordset(strSql)
+    
+    ' レコードセットを処理 (例: デバッグ出力に表示)
+    If Not rs.EOF Then
+        rs.MoveFirst
+        Do Until rs.EOF
+            Debug.Print rs!FieldName  ' フィールド名に置き換えてください
+            rs.MoveNext
+        Loop
+    End If
+    
+    ' レコードセットとデータベースを閉じる
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+End Sub
+
+
