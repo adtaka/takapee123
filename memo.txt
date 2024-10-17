@@ -2790,3 +2790,30 @@ sub openExternalForm()
 end sub
 
 
+sub openExternalFormAndKeepOpen()
+    ' 外部ファイルのパス
+    Dim strExternalDbPath As String
+    strExternalDbPath = "C:\path\to\your\external\database.accdb"
+    
+    ' Access Applicationオブジェクトの作成
+    Dim objAccess As Object
+    Set objAccess = CreateObject("Access.Application")
+    
+    ' 外部ファイルを開く
+    objAccess.OpenCurrentDatabase strExternalDbPath
+    
+    ' 外部ファイル内のフォームを開く
+    objAccess.DoCmd.OpenForm "yourFormName"
+    
+    ' Accessアプリケーションを表示
+    objAccess.Visible = True
+    
+    ' フォームが開いた状態のまま、Accessを閉じないように待機
+    Do While objAccess.CurrentProject.AllForms("yourFormName").IsLoaded
+        DoEvents ' ループ中に他の操作を許可
+    Loop
+    
+    ' オブジェクトの解放
+    Set objAccess = Nothing
+end sub
+
