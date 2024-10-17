@@ -2767,3 +2767,26 @@ Sub subProcessAccessFileToTable(ByVal filePath As String, ByRef accApp As Object
 End Sub
 
 
+sub openExternalForm()
+    ' 外部ファイルのパス
+    Dim strExternalDbPath As String
+    strExternalDbPath = "C:\path\to\your\external\database.accdb"
+    
+    ' Access Applicationオブジェクトの作成
+    Dim objAccess As Object
+    Set objAccess = CreateObject("Access.Application")
+    
+    ' 外部ファイルを開く
+    objAccess.OpenCurrentDatabase strExternalDbPath
+    
+    ' 外部ファイル内のフォームを開く
+    objAccess.DoCmd.OpenForm "yourFormName"
+    
+    ' Accessアプリケーションを表示
+    objAccess.Visible = True
+    
+    ' オブジェクトの解放
+    Set objAccess = Nothing
+end sub
+
+
