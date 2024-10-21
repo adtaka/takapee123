@@ -2984,3 +2984,80 @@ End Function
 
 
 
+Sub subGetTablesFromAccessFiles()
+    Dim strFolderPath As String
+    Dim objFSO As Object
+    Dim objFolder As Object
+    Dim objFile As Object
+    Dim objDb As DAO.Database
+    Dim objTableDef As DAO.TableDef
+    Dim objCurrentDb As DAO.Database
+    Dim rst As DAO.Recordset
+    Dim strTblName As String
+    Dim newTableDef As DAO.TableDef
+    Dim newField As DAO.Field
+    
+    ' 処理するフォルダのパスを指定
+    strFolderPath = "C:\Path\To\Your\Folder\" ' <- ここを適宜変更してください
+
+    ' FileSystemObject を作成
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFolder = objFSO.GetFolder(strFolderPath)
+
+    ' 現在のデータベースを参照
+    Set objCurrentDb = CurrentDb
+    
+    ' 新しいテーブル "tblTablesList" を作成（存在する場合は一度削除）
+    On Error Resume Next
+    objCurrentDb.TableDefs.Delete "tblTablesList"
+    On Error GoTo 0
+    
+    ' 新しいテーブルの作成
+    Set newTableDef = objCurrentDb.CreateTableDef("tblTablesList")
+    
+    ' フィールドの作成
+    Set newField = newTableDef.CreateField("FileName", dbText, 255)
+    newTableDef.Fields.Append newField
+    Set newField = newTableDef.CreateField("TableName", dbText, 255)
+    newTableDef.Fields.Append newField
+    
+    ' テーブルの追加
+    objCurrentDb.TableDefs.Append newTableDef
+
+    ' tblTablesList テーブルの Recordset をオープン
+    Set rst = objCurrentDb.OpenRecordset("tblTablesList", dbOpenDynaset)
+    
+    ' フォルダ内のすべてのファイルをループ
+    For Each objFile In objFolder.Files
+        ' Accessファイル (.accdb または .mdb) のみ処理
+        If objFSO.GetExtensionName(objFile.Name) = "accdb" Or objFSO.GetExtensionName(objFile.Name) = "mdb" Then
+            ' 各ファイルを開いてテーブル名を取得
+            Set objDb = OpenDatabase(objFile.Path)
+            For Each objTableDef In objDb.TableDefs
+                ' システムテーブル以外を取得
+                If Left(objTableDef.Name, 4) <> "MSys" Then
+                    strTblName = objTableDef.Name
+                    ' レコードを追加
+                    rst.AddNew
+                    rst!FileName = objFile.Name
+                    rst!TableName = strTblName
+                    rst.Update
+                End If
+            Next objTableDef
+            objDb.Close
+        End If
+    Next objFile
+
+    ' Recordset を閉じる
+    rst.Close
+
+    MsgBox "テーブル一覧の取得が完了しました。", vbInformation
+
+    ' 後処理
+    Set rst = Nothing
+    Set objDb = Nothing
+    Set objCurrentDb = Nothing
+    Set objFSO = Nothing
+    Set objFolder = Nothing
+End Sub
+
