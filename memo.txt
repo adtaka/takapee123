@@ -3198,3 +3198,13 @@ Sub subAddAutoNumberFieldWithoutPrimaryKey()
     
     MsgBox "すべてのテーブルにIDフィールドの追加が完了しました（主キーなし）。", vbInformation
 End Sub
+
+
+' 重複なしインデックスの作成
+                        Set idx = tblDef.CreateIndex("UniqueIDIndex")
+                        idx.Fields.Append idx.CreateField("ID")
+                        idx.Unique = True ' インデックスを一意制約として設定
+                        
+                        ' インデックスをテーブルに追加
+                        tblDef.Indexes.Append idx
+                        Debug.Print "IDフィールドに重複なしインデックスを追加しました: " & tblDef.Name
