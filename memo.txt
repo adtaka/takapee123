@@ -3061,3 +3061,71 @@ Sub subGetTablesFromAccessFiles()
     Set objFolder = Nothing
 End Sub
 
+
+
+
+-----------------------------
+!!!!!!!!!!!!!!!!!!
+
+Sub subAddAutoNumberToAllTables()
+    Dim objFso As Object
+    Dim objFolder As Object
+    Dim objFile As Object
+    Dim objDb As DAO.Database
+    Dim tblDef As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim strFolderPath As String
+    Dim strFilePath As String
+    Dim strTableName As String
+    Dim blnFieldExists As Boolean
+
+    ' 処理するフォルダパスを指定
+    strFolderPath = "C:\path\to\folder\" ' フォルダのパスを指定
+
+    ' FileSystemObjectの初期化
+    Set objFso = CreateObject("Scripting.FileSystemObject")
+    Set objFolder = objFso.GetFolder(strFolderPath)
+
+    ' フォルダ内のすべてのファイルをループ
+    For Each objFile In objFolder.Files
+        ' 拡張子が.accdbのファイルのみ処理
+        If objFso.GetExtensionName(objFile.Name) = "accdb" Then
+            strFilePath = objFolder.Path & "\" & objFile.Name
+            
+            ' データベースを開く
+            Set objDb = OpenDatabase(strFilePath)
+            
+            ' データベース内のすべてのテーブルをループ
+            For Each tblDef In objDb.TableDefs
+                ' システムテーブルはスキップ
+                If Left(tblDef.Name, 4) <> "MSys" Then
+                    blnFieldExists = False
+                    
+                    ' テーブル内のフィールドをチェックしてIDフィールドがあるか確認
+                    For Each fld In tblDef.Fields
+                        If fld.Name = "ID" Then
+                            blnFieldExists = True
+                            Exit For
+                        End If
+                    Next fld
+                    
+                    ' IDフィールドがない場合に追加
+                    If Not blnFieldExists Then
+                        objDb.Execute "ALTER TABLE [" & tblDef.Name & "] ADD COLUMN ID COUNTER(1,1);", dbFailOnError
+                        Debug.Print "IDフィールドを追加しました: " & tblDef.Name
+                    End If
+                End If
+            Next tblDef
+            
+            ' データベースを閉じる
+            objDb.Close
+        End If
+    Next objFile
+    
+    ' オブジェクトの解放
+    Set objDb = Nothing
+    Set objFso = Nothing
+    Set objFolder = Nothing
+    
+    MsgBox "すべてのテーブルにIDフィールドの追加が完了しました。", vbInformation
+End Sub
