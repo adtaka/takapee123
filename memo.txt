@@ -3208,3 +3208,67 @@ End Sub
                         ' インデックスをテーブルに追加
                         tblDef.Indexes.Append idx
                         Debug.Print "IDフィールドに重複なしインデックスを追加しました: " & tblDef.Name
+                        
+                        
+                        
+                        
+Sub subGetAllTablesFromFolderWithoutExecute()
+    Dim fso As Object
+    Dim fld As Object
+    Dim fil As Object
+    Dim dbExternal As DAO.Database
+    Dim dbCurrent As DAO.Database
+    Dim tblDef As DAO.TableDef
+    Dim rst As DAO.Recordset
+    Dim strFolderPath As String
+
+    ' フォルダパスの指定
+    strFolderPath = "C:\Your\Folder\Path\" ' ここにフォルダのパスを指定してください
+    
+    ' FileSystemObjectの作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set fld = fso.GetFolder(strFolderPath)
+    
+    ' 現在のデータベースを参照
+    Set dbCurrent = CurrentDb
+    
+    ' 結果格納用のテーブルを作成（必要に応じて削除して再作成）
+    On Error Resume Next
+    Set rst = dbCurrent.OpenRecordset("tblAllTablesInFolder")
+    If rst Is Nothing Then
+        ' テーブルが存在しない場合、新規作成
+        dbCurrent.CreateTableDef "tblAllTablesInFolder"
+        dbCurrent.Execute "CREATE TABLE tblAllTablesInFolder (FileName TEXT(255), TableName TEXT(255))"
+        Set rst = dbCurrent.OpenRecordset("tblAllTablesInFolder")
+    End If
+    On Error GoTo 0
+    
+    ' フォルダ内のすべてのファイルをループ
+    For Each fil In fld.Files
+        ' Accessファイルのみを処理
+        If fso.GetExtensionName(fil.Name) = "accdb" Or fso.GetExtensionName(fil.Name) = "mdb" Then
+            ' 外部データベースに接続
+            Set dbExternal = OpenDatabase(fil.Path)
+            
+            ' 外部データベース内のすべてのテーブルを取得
+            For Each tblDef In dbExternal.TableDefs
+                ' システムテーブルを除外
+                If Left(tblDef.Name, 4) <> "MSys" Then
+                    ' Recordsetを使ってデータを追加
+                    rst.AddNew
+                    rst!FileName = fil.Name
+                    rst!TableName = tblDef.Name
+                    rst.Update
+                End If
+            Next tblDef
+            
+            ' 外部データベースを閉じる
+            dbExternal.Close
+        End If
+    Next fil
+    
+    ' Recordsetを閉じる
+    rst.Close
+    
+    MsgBox "指定フォルダ内のすべてのテーブルが取得されました。", vbInformation
+End Sub
