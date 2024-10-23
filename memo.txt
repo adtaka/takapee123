@@ -3355,3 +3355,87 @@ Sub subOptimizeAllAccessFilesWithSizeTracking()
     Set appAccess = Nothing
     Set objFSO = Nothing
 End Sub
+
+
+
+
+
+Sub subOptimizeAllAccessFilesWithSizeTracking()
+    ' フォルダパスを指定
+    Dim strFolderPath As String
+    Dim objFSO As Object
+    Dim objFolder As Object
+    Dim objFile As Object
+    Dim appAccess As Object
+    Dim strFilePath As String
+    Dim strTempFilePath As String
+    Dim lngSizeBefore As Long
+    Dim lngSizeAfter As Long
+    Dim rs As DAO.Recordset
+    Dim db As DAO.Database
+    
+    ' フォルダパスをここに設定
+    strFolderPath = "C:\Path\To\AccessFiles" ' フォルダのパスを設定
+    
+    ' FileSystemObjectを使用してフォルダ内のファイルを取得
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFolder = objFSO.GetFolder(strFolderPath)
+    
+    ' Accessアプリケーションオブジェクトを作成
+    Set appAccess = CreateObject("Access.Application")
+    
+    ' 現在のデータベースを開き、テーブルを操作
+    Set db = CurrentDb
+    Set rs = db.OpenRecordset("tblFileOptimization")
+    
+    ' フォルダ内のすべてのファイルをループ
+    For Each objFile In objFolder.Files
+        ' Accessファイルのみを処理（.accdb または .mdb）
+        If objFSO.GetExtensionName(objFile.Name) = "accdb" Or objFSO.GetExtensionName(objFile.Name) = "mdb" Then
+            strFilePath = objFile.Path
+            strTempFilePath = objFile.Path & "_temp"
+            
+            Debug.Print "Optimizing: " & strFilePath
+            
+            ' 最適化前のファイルサイズを取得
+            lngSizeBefore = objFile.Size
+            
+            ' Accessファイルを開く
+            appAccess.OpenCurrentDatabase strFilePath
+            
+            ' ファイルを閉じる
+            appAccess.CloseCurrentDatabase
+            
+            ' ファイルを圧縮し、一時ファイルに保存
+            appAccess.DBEngine.CompactDatabase strFilePath, strTempFilePath
+            
+            ' 元のファイルを削除し、一時ファイルを元の場所にリネーム
+            objFSO.DeleteFile strFilePath
+            objFSO.MoveFile strTempFilePath, strFilePath
+            
+            ' 最適化後のファイルサイズを取得
+            lngSizeAfter = objFSO.GetFile(strFilePath).Size
+            
+            ' 結果をテーブルに記録
+            With rs
+                .AddNew
+                !FileName = objFile.Name
+                !FilePath = strFilePath
+                !SizeBefore = lngSizeBefore
+                !SizeAfter = lngSizeAfter
+                !DateOptimized = Now
+                .Update
+            End With
+            
+            Debug.Print "Optimized: " & strFilePath & " | Size Before: " & lngSizeBefore & " | Size After: " & lngSizeAfter
+        End If
+    Next objFile
+    
+    ' リソース解放
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+    appAccess.Quit
+    Set appAccess = Nothing
+    Set objFSO = Nothing
+End Sub
