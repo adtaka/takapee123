@@ -3439,3 +3439,57 @@ Sub subOptimizeAllAccessFilesWithSizeTracking()
     Set appAccess = Nothing
     Set objFSO = Nothing
 End Sub
+
+
+
+20241024-------------
+
+
+Sub subLinkAllAccessFilesInFolder()
+    Dim objFSO As Object
+    Dim objFolder As Object
+    Dim objFile As Object
+    Dim strFolderPath As String
+    Dim dbCurrent As DAO.Database
+    Dim dbExternal As DAO.Database
+    Dim strExternalDbPath As String
+    Dim strTableName As String
+    Dim tdfLinked As DAO.TableDef
+
+    ' フォルダパスを指定
+    strFolderPath = "C:\YourFolderPath" ' ここにフォルダパスを指定
+
+    ' FileSystemObjectを作成
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFolder = objFSO.GetFolder(strFolderPath)
+    Set dbCurrent = CurrentDb
+
+    ' フォルダ内の各ファイルを処理
+    For Each objFile In objFolder.Files
+        If objFSO.GetExtensionName(objFile.Name) = "accdb" Or objFSO.GetExtensionName(objFile.Name) = "mdb" Then
+            strExternalDbPath = objFile.Path
+            Set dbExternal = DBEngine.OpenDatabase(strExternalDbPath)
+
+            ' 外部データベース内のすべてのテーブルをリンク
+            For Each tdfLinked In dbExternal.TableDefs
+                If Not tdfLinked.Name Like "MSys*" Then
+                    strTableName = tdfLinked.Name
+                    On Error Resume Next
+                    ' テーブルのリンクを作成
+                    Set tdfLinked = dbCurrent.CreateTableDef(strTableName)
+                    tdfLinked.Connect = ";DATABASE=" & strExternalDbPath
+                    tdfLinked.SourceTableName = strTableName
+                    dbCurrent.TableDefs.Append tdfLinked
+                    On Error GoTo 0
+                End If
+            Next tdfLinked
+            dbExternal.Close
+        End If
+    Next objFile
+
+    ' 後処理
+    Set objFolder = Nothing
+    Set objFSO = Nothing
+    Set dbCurrent = Nothing
+    MsgBox "リンク作成が完了しました。"
+End Sub
