@@ -3591,3 +3591,37 @@ Sub subFindAndConcat()
     ' 結果をシート1のセルB1に表示
     wsSource.Range("B1").Value = strResult
 End Sub
+
+
+Function fncFindAndConcat(targetCell As Range) As String
+    Dim strTarget As String
+    Dim strResult As String
+    Dim wsSearch As Worksheet
+    Dim lngLastRow As Long
+    Dim i As Long
+
+    ' 検索対象のシートを指定
+    Set wsSearch = ThisWorkbook.Sheets("Sheet2") ' 検索対象シート
+
+    ' 検索する値を取得
+    strTarget = targetCell.Value
+
+    ' 検索対象シートの最終行を取得
+    lngLastRow = wsSearch.Cells(wsSearch.Rows.Count, "A").End(xlUp).Row
+
+    ' 結果初期化
+    strResult = ""
+
+    ' 検索対象シートの列Aで値を検索し、隣の列Bの値をカンマで連結
+    For i = 1 To lngLastRow
+        If wsSearch.Cells(i, 1).Value = strTarget Then
+            If strResult <> "" Then
+                strResult = strResult & ", "
+            End If
+            strResult = strResult & wsSearch.Cells(i, 2).Value
+        End If
+    Next i
+
+    ' 結果を関数の戻り値として返す
+    fncFindAndConcat = strResult
+End Function
