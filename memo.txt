@@ -3625,3 +3625,9 @@ Function fncFindAndConcat(targetCell As Range) As String
     ' 結果を関数の戻り値として返す
     fncFindAndConcat = strResult
 End Function
+
+
+    If Not Intersect(Target, Me.Range("A1:A10")) Is Nothing Then
+        ' UDFが含まれているセルの再計算
+        Application.Calculate
+    End If
