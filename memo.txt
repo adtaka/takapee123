@@ -3493,3 +3493,65 @@ Sub subLinkAllAccessFilesInFolder()
     Set dbCurrent = Nothing
     MsgBox "リンク作成が完了しました。"
 End Sub
+
+
+
+
+77777777777777777777777777777
+Sub subGetFilesAndSaveToTable(strFolderPath As String)
+    ' サブフォルダを含むすべてのファイル名、ファイルサイズ、タイムスタンプを取得してテーブルに保存する
+    Dim objFileSystem As Object
+    Dim objFolder As Object
+    Dim objSubFolder As Object
+    Dim objFile As Object
+    Dim rs As DAO.Recordset
+
+    ' FileSystemObjectの作成
+    Set objFileSystem = CreateObject("Scripting.FileSystemObject")
+    Set objFolder = objFileSystem.GetFolder(strFolderPath)
+
+    ' テーブルにデータを追加するためのRecordsetを開く
+    Set rs = CurrentDb.OpenRecordset("tblFiles", dbOpenDynaset)
+
+    ' ファイルをテーブルに保存する処理
+    For Each objFile In objFolder.Files
+        rs.AddNew
+        rs!FileName = objFile.Name
+        rs!FilePath = objFile.Path
+        rs!FileSize = objFile.Size ' ファイルサイズを取得 (バイト単位)
+        rs!LastModified = objFile.DateLastModified ' ファイルの最終更新日時を取得
+        rs.Update
+    Next objFile
+
+    ' サブフォルダがある場合は再帰的に処理
+    For Each objSubFolder In objFolder.SubFolders
+        subGetFilesAndSaveToTable objSubFolder.Path
+    Next objSubFolder
+
+    ' オブジェクトのクリーンアップ
+    rs.Close
+    Set rs = Nothing
+    Set objFile = Nothing
+    Set objFolder = Nothing
+    Set objFileSystem = Nothing
+End Sub
+
+Sub subStartFileImport()
+    ' 開始フォルダを指定して再帰処理を開始するサブプロシージャ
+    Dim strStartFolder As String
+    strStartFolder = "C:\Your\Start\Folder\Path" ' ここにフォルダパスを入力
+
+    ' テーブルの内容をクリア
+    Dim rs As DAO.Recordset
+    Set rs = CurrentDb.OpenRecordset("tblFiles", dbOpenDynaset)
+    Do While Not rs.EOF
+        rs.Delete
+        rs.MoveNext
+    Loop
+    rs.Close
+    Set rs = Nothing
+
+    ' ファイルを取得してテーブルに保存
+    subGetFilesAndSaveToTable strStartFolder
+End Sub
+
