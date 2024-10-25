@@ -3555,3 +3555,39 @@ Sub subStartFileImport()
     subGetFilesAndSaveToTable strStartFolder
 End Sub
 
+
+
+Sub subFindAndConcat()
+    Dim strTarget As String
+    Dim strResult As String
+    Dim wsSource As Worksheet
+    Dim wsSearch As Worksheet
+    Dim lngLastRow As Long
+    Dim i As Long
+
+    ' シートを指定
+    Set wsSource = ThisWorkbook.Sheets("Sheet1") ' 検索元シート
+    Set wsSearch = ThisWorkbook.Sheets("Sheet2") ' 検索対象シート
+
+    ' 検索する値を取得
+    strTarget = wsSource.Range("A1").Value
+
+    ' 検索対象シートの最終行を取得
+    lngLastRow = wsSearch.Cells(wsSearch.Rows.Count, "A").End(xlUp).Row
+
+    ' 結果初期化
+    strResult = ""
+
+    ' 検索対象シートの列Aで値を検索し、隣の列Bの値をカンマで連結
+    For i = 1 To lngLastRow
+        If wsSearch.Cells(i, 1).Value = strTarget Then
+            If strResult <> "" Then
+                strResult = strResult & ", "
+            End If
+            strResult = strResult & wsSearch.Cells(i, 2).Value
+        End If
+    Next i
+
+    ' 結果をシート1のセルB1に表示
+    wsSource.Range("B1").Value = strResult
+End Sub
