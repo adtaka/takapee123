@@ -3631,3 +3631,94 @@ End Function
         ' UDFが含まれているセルの再計算
         Application.Calculate
     End If
+    
+    
+    
+    
+    
+Sub prcExportErrorListToCSV()
+    Dim intErrorCode As Integer
+    Dim strErrorDescription As String
+    Dim strFilePath As String
+    Dim intFileNumber As Integer
+    
+    ' CSVファイルの保存先とファイル名
+    strFilePath = "C:\YourPath\Access_VBA_Error_List.csv"
+    intFileNumber = FreeFile
+    
+    ' CSVファイルの書き込み準備
+    Open strFilePath For Output As intFileNumber
+    Print #intFileNumber, "エラーコード,エラー内容" ' ヘッダー行の追加
+    
+    ' エラー一覧を取得してCSVに書き込み
+    For intErrorCode = 1 To 1000 ' 必要な範囲まで拡張可能
+        On Error Resume Next
+        Err.Raise intErrorCode
+        If Err.Number <> 0 Then
+            strErrorDescription = Err.Description
+            Err.Clear
+            
+            ' エラーコードと内容をCSVに書き込み
+            Print #intFileNumber, intErrorCode & "," & strErrorDescription
+        End If
+        On Error GoTo 0
+    Next intErrorCode
+    
+    ' ファイルを閉じる
+    Close intFileNumber
+    
+    MsgBox "エラー一覧がCSVファイルに出力されました: " & strFilePath, vbInformation
+End Sub
+
+
+Sub exportNestedDictionaryToCSV_FSO()
+    Dim fso As Object
+    Dim csvFile As Object
+    Dim mainDict As Object
+    Dim subDict As Object
+    Dim key As Variant
+    Dim subKey As Variant
+    Dim filePath As String
+    
+    ' CSVファイルのパスを指定
+    filePath = "C:\path\to\your\file.csv"  ' 保存するパスに変更してください
+
+    ' FileSystemObjectとファイルを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set csvFile = fso.CreateTextFile(filePath, True, True) ' 第2引数で上書きを許可
+    
+    ' メインのディクショナリを作成
+    Set mainDict = CreateObject("Scripting.Dictionary")
+
+    ' サブディクショナリ1を作成し、キーと値を追加
+    Set subDict = CreateObject("Scripting.Dictionary")
+    subDict.Add "SubKey1", "SubValue1"
+    subDict.Add "SubKey2", "SubValue2"
+    mainDict.Add "MainKey1", subDict
+
+    ' サブディクショナリ2を作成し、キーと値を追加
+    Set subDict = CreateObject("Scripting.Dictionary")
+    subDict.Add "SubKeyA", "SubValueA"
+    subDict.Add "SubKeyB", "SubValueB"
+    mainDict.Add "MainKey2", subDict
+
+    ' CSVのヘッダーを書き込む
+    csvFile.WriteLine "MainKey,SubKey,Value"
+    
+    ' メインディクショナリの内容をCSVに書き込む
+    For Each key In mainDict.Keys
+        Set subDict = mainDict(key)  ' サブディクショナリを取得
+        For Each subKey In subDict.Keys
+            csvFile.WriteLine key & "," & subKey & "," & subDict(subKey)
+        Next subKey
+    Next key
+
+    ' ファイルを閉じる
+    csvFile.Close
+
+    MsgBox "CSVファイルが作成されました: " & filePath
+End Sub
+
+    
+    
+    
