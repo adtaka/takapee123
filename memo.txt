@@ -3722,3 +3722,64 @@ End Sub
     
     
     
+    
+    
+ #If VBA7 Then
+    Private Declare PtrSafe Function OpenProcess Lib "kernel32" (ByVal dwDesiredAccess As Long, ByVal bInheritHandle As Long, ByVal dwProcessId As Long) As LongPtr
+    Private Declare PtrSafe Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As LongPtr, lpExitCode As Long) As Long
+    Private Declare PtrSafe Function CloseHandle Lib "kernel32" (ByVal hObject As LongPtr) As Long
+#Else
+    Private Declare Function OpenProcess Lib "kernel32" (ByVal dwDesiredAccess As Long, ByVal bInheritHandle As Long, ByVal dwProcessId As Long) As Long
+    Private Declare Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As Long, lpExitCode As Long) As Long
+    Private Declare Function CloseHandle Lib "kernel32" (ByVal hObject As Long) As Long
+#End If
+
+Private Const PROCESS_QUERY_INFORMATION = &H400
+Private Const STILL_ACTIVE = &H103
+
+sub openExternalAccessAndGetProcessId()
+    Dim strExternalDbPath As String
+    Dim objAccess As Object
+    Dim lngProcessId As Long
+    Dim hProcess As LongPtr
+    Dim lngExitCode As Long
+    
+    ' 外部ファイルのパス
+    strExternalDbPath = "C:\path\to\your\external\database.accdb"
+    
+    ' Access Applicationオブジェクトの作成
+    Set objAccess = CreateObject("Access.Application")
+    
+    ' 外部ファイルを開く
+    objAccess.OpenCurrentDatabase strExternalDbPath
+    
+    ' Accessアプリケーションを表示
+    objAccess.Visible = True
+    
+    ' AccessプロセスのIDを取得
+    lngProcessId = objAccess.hWndAccessApp
+    
+    ' プロセスのハンドルを取得
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, False, lngProcessId)
+    
+    ' プロセスが終了するまで待機
+    Do
+        ' プロセスの終了コードを取得
+        Call GetExitCodeProcess(hProcess, lngExitCode)
+        
+        ' プロセスがまだアクティブか確認
+        If lngExitCode <> STILL_ACTIVE Then
+            Exit Do ' プロセスが終了
+        End If
+        
+        DoEvents ' 他の操作を受け付ける
+    Loop
+    
+    ' プロセスハンドルを閉じる
+    CloseHandle hProcess
+    
+    ' オブジェクトの解放
+    Set objAccess = Nothing
+end sub
+
+    
