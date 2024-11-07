@@ -3882,3 +3882,31 @@ Sub exportAllModules()
 End Sub
 
     
+    
+Sub exportAllModules()
+    Dim obj As AccessObject
+    Dim db As Object
+    Dim filePath As String
+    
+    ' 保存先のフォルダパスを指定（例: C:\ExportedModules\）
+    filePath = "C:\ExportedModules\"
+    
+    ' FileSystemObjectを使ってフォルダの存在確認
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    If Not fso.FolderExists(filePath) Then
+        fso.CreateFolder filePath
+    End If
+    
+    Set db = Application.CurrentProject
+    
+    ' 各モジュールをエクスポート
+    For Each obj In db.AllModules
+        Application.SaveAsText acModule, obj.Name, filePath & obj.Name & ".bas"
+    Next obj
+
+    Set db = Nothing
+    Set fso = Nothing
+    MsgBox "すべてのモジュールがエクスポートされました。"
+End Sub
