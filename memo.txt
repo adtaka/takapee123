@@ -3946,3 +3946,6 @@ Sub printAllModuleContents()
     Set db = Nothing
     MsgBox "すべてのモジュール内容が出力されました。"
 End Sub
+
+
+"c:\..\MSACCESS.EXE" "c:\..\file.mdb" /decompile
