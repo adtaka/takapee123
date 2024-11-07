@@ -3840,4 +3840,17 @@ sub openExternalAccessAndMonitorProcess()
     Set objAccess = Nothing
 end sub
 
+
+Sub listModules()
+    Dim obj As AccessObject
+    Dim db As Object
+    Set db = Application.CurrentProject
+
+    For Each obj In db.AllModules
+        Debug.Print obj.Name
+    Next obj
+
+    Set db = Nothing
+End Sub
+
     
