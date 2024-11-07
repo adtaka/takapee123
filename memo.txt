@@ -4140,3 +4140,56 @@ Sub getAllFieldAttributesToDictionary(tblName As String)
     Set db = Nothing
 End Sub
 
+
+Function fncGetPrimaryKeyAttributes(tblName As String) As Object
+    Dim db As DAO.Database
+    Dim tblDef As DAO.TableDef
+    Dim idx As DAO.Index
+    Dim fld As DAO.Field
+    Dim dict As Object
+    Dim fieldDict As Object
+    
+    ' メインのディクショナリを作成
+    Set dict = CreateObject("Scripting.Dictionary")
+    
+    ' データベースを設定
+    Set db = CurrentDb
+    
+    ' テーブル定義を取得
+    Set tblDef = db.TableDefs(tblName)
+    
+    ' プライマリキーのインデックスを探す
+    For Each idx In tblDef.Indexes
+        If idx.Primary Then
+            ' プライマリキーが見つかった場合、フィールド属性を取得
+            For Each fld In idx.Fields
+                ' プライマリキーの属性用サブディクショナリを作成
+                Set fieldDict = CreateObject("Scripting.Dictionary")
+                
+                ' 各属性をサブディクショナリに追加
+                fieldDict("DataType") = tblDef.Fields(fld.Name).Type
+                fieldDict("Size") = tblDef.Fields(fld.Name).Size
+                fieldDict("Required") = tblDef.Fields(fld.Name).Required
+                fieldDict("AllowZeroLength") = tblDef.Fields(fld.Name).AllowZeroLength
+                fieldDict("Attributes") = tblDef.Fields(fld.Name).Attributes
+                fieldDict("DefaultValue") = tblDef.Fields(fld.Name).DefaultValue
+                fieldDict("ValidationRule") = tblDef.Fields(fld.Name).ValidationRule
+                fieldDict("ValidationText") = tblDef.Fields(fld.Name).ValidationText
+                
+                ' メインディクショナリにフィールド名をキー、サブディクショナリを値として追加
+                dict(fld.Name) = fieldDict
+            Next fld
+            Exit For
+        End If
+    Next idx
+    
+    ' オブジェクト解放
+    Set fld = Nothing
+    Set idx = Nothing
+    Set tblDef = Nothing
+    Set db = Nothing
+    
+    ' ディクショナリを返す
+    Set fncGetPrimaryKeyAttributes = dict
+End Function
+
