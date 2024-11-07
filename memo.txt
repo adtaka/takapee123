@@ -4083,3 +4083,60 @@ strSql = "delete * from FilePath"
 db.Execute strSql
 
 End Sub
+
+
+Sub getAllFieldAttributesToDictionary(tblName As String)
+    Dim db As DAO.Database
+    Dim tblDef As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim dict As Object
+    Dim fieldDict As Object
+    
+    ' メインのディクショナリを作成
+    Set dict = CreateObject("Scripting.Dictionary")
+    
+    ' データベースを設定
+    Set db = CurrentDb
+    
+    ' テーブル定義を取得
+    Set tblDef = db.TableDefs(tblName)
+    
+    ' 各フィールドの属性をディクショナリに格納
+    For Each fld In tblDef.Fields
+        ' フィールドの属性用のサブディクショナリを作成
+        Set fieldDict = CreateObject("Scripting.Dictionary")
+        
+        ' 各属性をサブディクショナリに追加
+        fieldDict("DataType") = fld.Type
+        fieldDict("Size") = fld.Size
+        fieldDict("Required") = fld.Required
+        fieldDict("AllowZeroLength") = fld.AllowZeroLength
+        fieldDict("Attributes") = fld.Attributes
+        fieldDict("DefaultValue") = fld.DefaultValue
+        fieldDict("ValidationRule") = fld.ValidationRule
+        fieldDict("ValidationText") = fld.ValidationText
+        
+        ' メインディクショナリにフィールド名をキー、サブディクショナリを値として追加
+        dict(fld.Name) = fieldDict
+    Next fld
+    
+    ' ディクショナリの内容を確認 (例としてデバッグウィンドウに出力)
+    Dim key As Variant
+    Dim subKey As Variant
+    
+    For Each key In dict.Keys
+        Debug.Print "Field Name: " & key
+        For Each subKey In dict(key).Keys
+            Debug.Print "    " & subKey & ": " & dict(key)(subKey)
+        Next subKey
+        Debug.Print "---------------------------------"
+    Next key
+    
+    ' オブジェクト解放
+    Set fieldDict = Nothing
+    Set dict = Nothing
+    Set fld = Nothing
+    Set tblDef = Nothing
+    Set db = Nothing
+End Sub
+
