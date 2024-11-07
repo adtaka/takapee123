@@ -3910,3 +3910,39 @@ Sub exportAllModules()
     Set fso = Nothing
     MsgBox "すべてのモジュールがエクスポートされました。"
 End Sub
+
+
+Sub printAllModuleContents()
+    Dim obj As AccessObject
+    Dim db As Object
+    Dim modName As String
+    Dim line As String
+    Dim i As Long
+    Dim moduleCode As String
+    
+    Set db = Application.CurrentProject
+    
+    ' 各モジュールの内容を出力
+    For Each obj In db.AllModules
+        modName = obj.Name
+        moduleCode = ""
+        
+        ' モジュールを開いて内容を取得
+        DoCmd.OpenModule modName
+        With Application.Modules(modName)
+            For i = 1 To .CountOfLines
+                line = .Lines(i, 1)
+                moduleCode = moduleCode & line & vbCrLf
+            Next i
+        End With
+        DoCmd.Close acModule, modName
+        
+        ' モジュール名と内容を表示
+        Debug.Print "Module Name: " & modName
+        Debug.Print moduleCode
+        Debug.Print String(40, "-") ' 区切り線
+    Next obj
+
+    Set db = Nothing
+    MsgBox "すべてのモジュール内容が出力されました。"
+End Sub
