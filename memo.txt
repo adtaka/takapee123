@@ -3853,4 +3853,32 @@ Sub listModules()
     Set db = Nothing
 End Sub
 
+
+Sub exportAllModules()
+    Dim obj As AccessObject
+    Dim db As Object
+    Dim filePath As String
+    Dim fso As Object
+    
+    ' 保存先のフォルダパスを指定（例: C:\ExportedModules\）
+    filePath = "C:\ExportedModules\"
+    
+    ' FileSystemObjectを使ってフォルダの存在確認
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(filePath) Then
+        fso.CreateFolder filePath
+    End If
+    
+    Set db = Application.CurrentProject
+    
+    For Each obj In db.AllModules
+        ' モジュールをエクスポート
+        DoCmd.TransferText acExportModule, , obj.Name, filePath & obj.Name & ".bas"
+    Next obj
+
+    Set db = Nothing
+    Set fso = Nothing
+    MsgBox "すべてのモジュールがエクスポートされました。"
+End Sub
+
     
