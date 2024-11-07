@@ -3949,3 +3949,137 @@ End Sub
 
 
 "c:\..\MSACCESS.EXE" "c:\..\file.mdb" /decompile
+
+
+
+
+
+Option Compare Database
+Option Explicit
+
+Function start_DailyBackup()
+    Call DailyBackup
+End Function
+
+Public Sub DailyBackup()
+
+Dim Fso As Object
+Dim strTgtFile As String
+Dim BakFileType As String
+Dim BakFilename As String
+
+'Access 2000,Access2002 ではMicrosoft  DAO 3.x Object Library　に参照設定のこと
+Dim db As DAO.Database
+Dim rst As DAO.Recordset
+Dim strSql As String
+
+Dim MotoFolderPath As String
+Dim MotoFileNM As String
+
+Dim BakFolderPath As String
+Dim DropBox As String
+DropBox = "C:\drop\Dropbox\shun"
+Dim BakFileNM As String
+Dim BakTime As String
+
+Dim oShell As Object
+
+Dim GET_FileNM As String
+
+Dim L_cnt As Long  'ループカウンタ
+
+On Error Resume Next
+
+'バックアップされるファイル名
+MotoFileNM = Application.CurrentProject.Name
+
+'バックアップされるファイルがあるフォルダ
+MotoFolderPath = Application.CurrentProject.Path
+
+'バックアップを取得した時間
+BakTime = Format(Now, "yyyy.mm.dd")
+
+'バックアップ出力先ファイルパス
+'フォルダがない時は、フォルダを作成
+BakFolderPath = Application.CurrentProject.Path & "\Backup"
+
+If Dir(BakFolderPath, vbDirectory) = "" Then MkDir BakFolderPath
+
+    BakFolderPath = BakFolderPath & "\DailyBackup"
+
+If Dir(BakFolderPath, vbDirectory) = "" Then MkDir BakFolderPath
+
+
+'##########################################
+'出力先に同名のファイルがなければ実行
+'###########################################
+
+
+'バックアップ先出力ファイル名
+BakFileNM = BakTime & "-" & MotoFileNM
+
+If Dir(BakFolderPath & "\" & BakFileNM) = "" Then
+    
+    'ファイルコピー
+    Set oShell = CreateObject("WScript.Shell")
+        oShell.Run "%ComSpec% /c copy " & Chr(34) & MotoFolderPath & "\" & MotoFileNM & Chr(34) & " " & Chr(34) & BakFolderPath & "\" & BakFileNM & Chr(34), , True
+        oShell.Run "%ComSpec% /c copy " & Chr(34) & MotoFolderPath & "\" & MotoFileNM & Chr(34) & " " & Chr(34) & DropBox & "\" & BakFileNM & Chr(34), , True
+    Set oShell = Nothing
+End If
+
+
+'FilePathテーブルから全レコード削除
+
+Set db = CurrentDb
+
+'FilePathテーブルが存在していなければ作成
+'アクセスのシステムテーブル「MSysObjects」中に「FilePath」というテーブルの個数をカウント
+If DCount("*", "MSysObjects", "Name='FilePath' and Type=1") = 0 Then
+    
+    strSql = "create table FilePath (BakFilePath text)"
+    db.Execute strSql
+End If
+
+strSql = "delete * from FilePath"
+db.Execute strSql
+
+'DailyBackupフォルダ内のファイルパスをFilePathテーブルへ追加
+
+'バックアップ先出力ファイル名
+BakFileNM = "*" & MotoFileNM
+
+GET_FileNM = Dir(BakFolderPath & "\" & BakFileNM)
+
+Do While GET_FileNM <> ""
+
+    strSql = "insert into FilePath(BakFilePath) values('" & BakFolderPath & "\" & GET_FileNM & "')"
+    
+    db.Execute strSql
+    GET_FileNM = Dir
+Loop
+
+'ファイル名を降順に並び変え、直近5ファイルを除き削除
+
+strSql = "select * from FilePath order by BakFilePath desc"
+Set rst = db.OpenRecordset(strSql)
+L_cnt = 1
+
+If rst.RecordCount <> 0 Then
+    Do
+    
+        'ファイル削除
+        If L_cnt > 9 Then Kill rst!BakFilePath
+        
+        L_cnt = L_cnt + 1
+        rst.MoveNext
+    Loop Until rst.EOF = True
+End If
+rst.Close
+
+
+'FilePathテーブル全レコード削除
+
+strSql = "delete * from FilePath"
+db.Execute strSql
+
+End Sub
