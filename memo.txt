@@ -4254,3 +4254,160 @@ https://learn.microsoft.com/ja-jp/officeupdates/update-history-microsoft365-apps
 インストール日	‎2023/‎12/‎01
 OS ビルド	22631.4460
 エクスペリエンス	Windows Feature Experience Pack 1000.22700.1047.0
+
+
+
+
+**************************************
+Sub insertRecordsToTablesFromList(tableListTable As String, insertCount As Integer, fieldValues As Dictionary, Optional securityNumber As String = "")
+    Dim db As DAO.Database
+    Dim rsTableList As DAO.Recordset
+    Dim tableName As String
+
+    ' データベースオブジェクトをセット
+    Set db = CurrentDb
+    Set rsTableList = db.OpenRecordset("SELECT * FROM " & tableListTable, dbOpenDynaset)
+
+    ' テーブルリストの各テーブルに対して処理を実行
+    Do Until rsTableList.EOF
+        tableName = rsTableList!TableName ' 所定のテーブルに格納されているテーブル名フィールド（"TableName"を適宜変更）
+
+        ' 各テーブルにレコードを挿入
+        insertRecordsSafely tableName, insertCount, fieldValues, securityNumber
+
+        rsTableList.MoveNext
+    Loop
+
+    ' クリーンアップ
+    rsTableList.Close
+    Set rsTableList = Nothing
+    Set db = Nothing
+End Sub
+
+' 各テーブルに対して安全にレコードを挿入するプロシージャ（複数のプライマリキー、入力規則対応）
+Sub insertRecordsSafely(tblName As String, insertCount As Integer, fieldValues As Dictionary, securityNumber As String)
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim i As Integer
+    Dim primaryKeyFields As Collection
+    Dim newPrimaryKeyValues As Collection
+    Dim existingPrimaryKeys As Collection
+    Dim fld As DAO.Field
+    Dim keyCombination As String
+    
+    ' 初期化
+    Set db = CurrentDb
+    Set rs = db.OpenRecordset("SELECT * FROM " & tblName, dbOpenDynaset)
+    Set primaryKeyFields = New Collection
+    Set existingPrimaryKeys = New Collection
+    
+    ' プライマリキーとして設定されているフィールドを収集
+    For Each fld In rs.Fields
+        If fld.Attributes And dbPrimaryKey Then
+            primaryKeyFields.Add fld.Name
+        End If
+    Next fld
+
+    ' 既存のプライマリキー組み合わせを収集
+    Do Until rs.EOF
+        keyCombination = ""
+        For Each fld In primaryKeyFields
+            keyCombination = keyCombination & "|" & rs.Fields(fld).Value
+        Next fld
+        existingPrimaryKeys.Add keyCombination, keyCombination
+        rs.MoveNext
+    Loop
+    rs.Close
+
+    ' データの挿入
+    Set rs = db.OpenRecordset(tblName, dbOpenDynaset)
+    For i = 1 To insertCount
+        ' 新しいプライマリキー組み合わせを生成し、重複しないよう確認
+        Do
+            keyCombination = ""
+            Set newPrimaryKeyValues = New Collection
+            For Each fld In primaryKeyFields
+                Dim newValue As Variant
+                newValue = CLng(Rnd() * 100000) ' 必要に応じて他の生成方法に変更可能
+                newPrimaryKeyValues.Add newValue
+                keyCombination = keyCombination & "|" & newValue
+            Next fld
+        Loop Until Not IsInCollection(existingPrimaryKeys, keyCombination)
+
+        ' レコード追加
+        rs.AddNew
+        ' 各プライマリキーに新しい値を設定
+        For j = 1 To primaryKeyFields.Count
+            rs.Fields(primaryKeyFields(j)).Value = newPrimaryKeyValues(j)
+        Next j
+
+        ' 必須項目と入力規則を考慮しながら値を設定
+        For Each fld In rs.Fields
+            If fld.Required Then
+                If fieldValues.Exists(fld.Name) Then
+                    If IsValidValue(fld, fieldValues(fld.Name)) Then
+                        rs.Fields(fld.Name).Value = fieldValues(fld.Name)
+                    Else
+                        Debug.Print "指定された値が入力規則に違反しています: " & fld.Name
+                    End If
+                ElseIf InStr(fld.Name, "証券番号") > 0 And securityNumber <> "" Then
+                    If IsValidValue(fld, securityNumber) Then
+                        rs.Fields(fld.Name).Value = securityNumber
+                    Else
+                        Debug.Print "証券番号の値が入力規則に違反しています: " & fld.Name
+                    End If
+                Else
+                    ' データ型に応じたデフォルト値を設定
+                    Dim defaultValue As Variant
+                    Select Case fld.Type
+                        Case dbText, dbMemo
+                            defaultValue = ""
+                        Case dbInteger, dbLong, dbByte
+                            defaultValue = 0
+                        Case dbSingle, dbDouble, dbCurrency
+                            defaultValue = 0#
+                        Case dbDate
+                            defaultValue = Date
+                        Case dbBoolean
+                            defaultValue = False
+                        Case Else
+                            defaultValue = Null
+                    End Select
+                    ' 入力規則に合致するか確認してからデフォルト値を設定
+                    If IsValidValue(fld, defaultValue) Then
+                        rs.Fields(fld.Name).Value = defaultValue
+                    Else
+                        Debug.Print "デフォルト値が入力規則に違反しています: " & fld.Name
+                    End If
+                End If
+            End If
+        Next fld
+
+        ' レコードの確定
+        rs.Update
+        existingPrimaryKeys.Add keyCombination, keyCombination
+    Next i
+
+    ' クリーンアップ
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+End Sub
+
+' 入力規則に合致するか確認する関数
+Function IsValidValue(fld As DAO.Field, value As Variant) As Boolean
+    On Error Resume Next
+    fld.ValidateOnSet = True
+    fld.Value = value
+    IsValidValue = (Err.Number = 0)
+    fld.ValidateOnSet = False
+    If Err.Number <> 0 Then Err.Clear
+    On Error GoTo 0
+End Function
+
+' コレクション内にキーが存在するか確認する関数
+Function IsInCollection(col As Collection, key As String) As Boolean
+    On Error Resume Next
+    IsInCollection = Not IsEmpty(col(key))
+    On Error GoTo 0
+End Function
