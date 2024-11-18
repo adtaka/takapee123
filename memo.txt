@@ -4485,3 +4485,14 @@ Sub fncAddAutoNumberToAllTablesNoSQL()
     MsgBox "すべてのテーブルに「自動採番」フィールドを追加しました。", vbInformation
 End Sub
 
+
+
+$folders = @(
+    "C:\フォルダ1",
+    "D:\フォルダ2",
+    "E:\フォルダ3"
+)
+
+foreach ($folder in $folders) {
+    Start-Process explorer.exe $folder
+}
