@@ -4496,3 +4496,8 @@ $folders = @(
 foreach ($folder in $folders) {
     Start-Process explorer.exe $folder
 }
+
+
+
+アクセス　vba イミディエイトウィンドウ　画面クリア
+Application.VBE.CommandBars("Edit").Controls("Clear Pane").Execute
