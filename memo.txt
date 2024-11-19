@@ -4703,3 +4703,43 @@ Sub saveTableTextFields(tableName As String, resultTableName As String)
     Set tdf = Nothing
     Set db = Nothing
 End Sub
+
+
+
+-------------------------
+Sub createResultsTable()
+    Dim db As DAO.Database
+    Dim resultTable As DAO.TableDef
+
+    ' データベースを取得
+    Set db = CurrentDb
+
+    ' 結果格納用のテーブル名
+    Dim resultTableName As String
+    resultTableName = "ResultsTable"
+
+    ' 結果格納テーブルを作成（存在しない場合）
+    On Error Resume Next
+    Set resultTable = db.TableDefs(resultTableName)
+    If Err.Number = 0 Then
+        MsgBox "テーブル '" & resultTableName & "' はすでに存在します。", vbInformation
+        Exit Sub
+    End If
+    On Error GoTo 0
+
+    ' テーブルを新規作成
+    Set resultTable = db.CreateTableDef(resultTableName)
+    With resultTable
+        .Fields.Append .CreateField("TableName", dbText, 255) ' テーブル名
+        .Fields.Append .CreateField("FieldName", dbText, 255) ' フィールド名
+        .Fields.Append .CreateField("FieldType", dbText, 255) ' データ型の説明
+    End With
+    db.TableDefs.Append resultTable
+    db.TableDefs.Refresh
+
+    MsgBox "結果格納用のテーブル '" & resultTableName & "' を作成しました。", vbInformation
+
+    ' オブジェクトのクリーンアップ
+    Set resultTable = Nothing
+    Set db = Nothing
+End Sub
