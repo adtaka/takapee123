@@ -4595,3 +4595,111 @@ Sub saveTextFieldStatusToTable()
     Set resultTable = Nothing
     Set db = Nothing
 End Sub
+
+
+
+Sub processAllTables()
+    Dim db As DAO.Database
+    Dim sourceRecordset As DAO.Recordset
+    Dim tableName As String
+    Dim sourceTableName As String
+    Dim resultTableName As String
+
+    ' 所定のテーブルと結果格納テーブルの名前を指定
+    sourceTableName = "SourceTable"
+    resultTableName = "ResultsTable"
+
+    ' データベースを取得
+    Set db = CurrentDb
+
+    ' 結果格納テーブルの存在を確認し、なければ作成
+    On Error Resume Next
+    Set sourceRecordset = db.OpenRecordset(resultTableName, dbOpenDynaset)
+    If Err.Number <> 0 Then
+        On Error GoTo 0
+        createResultsTable ' テーブル作成プロシージャを呼び出す
+    End If
+    On Error GoTo 0
+
+    ' 所定のテーブルを開く
+    Set sourceRecordset = db.OpenRecordset(sourceTableName, dbOpenDynaset)
+    If sourceRecordset.EOF Then
+        MsgBox "所定のテーブル '" & sourceTableName & "' にテーブル名が格納されていません。", vbExclamation
+        Exit Sub
+    End If
+
+    ' 所定のテーブルに基づいてループ処理
+    Do Until sourceRecordset.EOF
+        tableName = sourceRecordset!TableName
+        saveTableTextFields tableName, resultTableName ' テーブルごとの処理を実行
+        sourceRecordset.MoveNext
+    Loop
+
+    MsgBox "すべてのテーブルの処理が完了しました。", vbInformation
+
+    ' オブジェクトのクリーンアップ
+    Set sourceRecordset = Nothing
+    Set db = Nothing
+End Sub
+
+' テーブルのフィールド情報を結果テーブルに保存する
+Sub saveTableTextFields(tableName As String, resultTableName As String)
+    Dim db As DAO.Database
+    Dim tdf As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim resultRecordset As DAO.Recordset
+    Dim textFieldCount As Integer
+    Dim fieldTypeDescription As String
+
+    ' データベースを取得
+    Set db = CurrentDb
+    textFieldCount = 0
+
+    ' 結果格納テーブルのRecordsetを開く
+    Set resultRecordset = db.OpenRecordset(resultTableName, dbOpenDynaset)
+
+    ' 確認対象テーブルを取得
+    On Error Resume Next
+    Set tdf = db.TableDefs(tableName)
+    If Err.Number <> 0 Then
+        MsgBox "テーブル '" & tableName & "' が存在しません。", vbExclamation
+        Exit Sub
+    End If
+    On Error GoTo 0
+
+    ' フィールドをチェックし、結果を格納
+    For Each fld In tdf.Fields
+        Select Case fld.Type
+            Case dbText
+                fieldTypeDescription = "短いテキスト"
+                textFieldCount = textFieldCount + 1
+            Case dbMemo
+                fieldTypeDescription = "長いテキスト"
+                textFieldCount = textFieldCount + 1
+            Case Else
+                fieldTypeDescription = "その他のデータ型"
+        End Select
+
+        ' データを格納
+        resultRecordset.AddNew
+        resultRecordset.Fields("TableName").Value = tableName
+        resultRecordset.Fields("FieldName").Value = fld.Name
+        resultRecordset.Fields("FieldType").Value = fieldTypeDescription
+        resultRecordset.Update
+    Next fld
+
+    ' データ型が存在しない場合の処理
+    If textFieldCount = 0 Then
+        resultRecordset.AddNew
+        resultRecordset.Fields("TableName").Value = tableName
+        resultRecordset.Fields("FieldName").Value = "該当なし"
+        resultRecordset.Fields("FieldType").Value = "短いテキストまたは長いテキスト型なし"
+        resultRecordset.Update
+    End If
+
+    ' オブジェクトのクリーンアップ
+    Set resultRecordset = Nothing
+    Set fld = Nothing
+    Set tdf = Nothing
+    Set db = Nothing
+End Sub
