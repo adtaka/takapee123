@@ -4743,3 +4743,42 @@ Sub createResultsTable()
     Set resultTable = Nothing
     Set db = Nothing
 End Sub
+
+
+Sub prcCheckNumericFieldsWithoutValidationRule()
+    Dim db As DAO.Database
+    Dim tdf As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim strTableName As String
+    Dim strMessage As String
+
+    ' 対象のテーブル名
+    strTableName = "YourTableName" ' ここを調べたいテーブル名に置き換えてください
+
+    ' データベースとテーブル定義を取得
+    Set db = CurrentDb
+    Set tdf = db.TableDefs(strTableName)
+
+    ' メッセージの初期化
+    strMessage = "入力規則のない数値型フィールド: " & vbCrLf
+
+    ' テーブル内のフィールドを調査
+    For Each fld In tdf.Fields
+        ' 数値型であるか確認
+        Select Case fld.Type
+            Case dbByte, dbInteger, dbLong, dbSingle, dbDouble, dbDecimal
+                ' ValidationRuleプロパティが空か確認
+                If Nz(fld.ValidationRule, "") = "" Then
+                    strMessage = strMessage & "- " & fld.Name & vbCrLf
+                End If
+        End Select
+    Next fld
+
+    ' 結果を表示
+    MsgBox strMessage, vbInformation, "フィールドチェック"
+
+    ' オブジェクトの解放
+    Set fld = Nothing
+    Set tdf = Nothing
+    Set db = Nothing
+End Sub
