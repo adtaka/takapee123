@@ -4786,7 +4786,7 @@ End Sub
 
 
 
-Sub prcExportModuleAndProcedureListNoSQL()
+Sub prcExportModuleAndProcedureListNoWith()
     ' 変数定義
     Dim db As DAO.Database
     Dim rst As DAO.Recordset
@@ -4795,6 +4795,8 @@ Sub prcExportModuleAndProcedureListNoSQL()
     Dim strModuleName As String
     Dim strProcedureName As String
     Dim lngLine As Long
+    Dim tblDef As DAO.TableDef
+    Dim fld As DAO.Field
 
     ' データベースオブジェクトの取得
     Set db = CurrentDb
@@ -4805,11 +4807,13 @@ Sub prcExportModuleAndProcedureListNoSQL()
     On Error GoTo 0
 
     ' テーブルの作成
-    With db.CreateTableDef("tblModuleProcedures")
-        .Fields.Append .CreateField("ModuleName", dbText, 255)
-        .Fields.Append .CreateField("ProcedureName", dbText, 255)
-        db.TableDefs.Append .RefreshLink
-    End With
+    Set tblDef = db.CreateTableDef("tblModuleProcedures")
+    Set fld = tblDef.CreateField("ModuleName", dbText, 255)
+    tblDef.Fields.Append fld
+    Set fld = tblDef.CreateField("ProcedureName", dbText, 255)
+    tblDef.Fields.Append fld
+    db.TableDefs.Append tblDef
+    db.TableDefs.Refresh
 
     ' テーブルへのアクセス
     Set rst = db.OpenRecordset("tblModuleProcedures", dbOpenDynaset)
@@ -4825,8 +4829,8 @@ Sub prcExportModuleAndProcedureListNoSQL()
             If strProcedureName <> "" Then
                 ' レコードを追加
                 rst.AddNew
-                rst!ModuleName = strModuleName
-                rst!ProcedureName = strProcedureName
+                rst.Fields("ModuleName").Value = strModuleName
+                rst.Fields("ProcedureName").Value = strProcedureName
                 rst.Update
             End If
         Next lngLine
@@ -4839,4 +4843,6 @@ Sub prcExportModuleAndProcedureListNoSQL()
     rst.Close
     Set rst = Nothing
     Set db = Nothing
+    Set tblDef = Nothing
+    Set fld = Nothing
 End Sub
