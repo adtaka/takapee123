@@ -5071,3 +5071,81 @@ Function getIndexInfo(tbl As DAO.TableDef, fieldName As String) As String
     Next idx
     getIndexInfo = "なし"
 End Function
+
+
+
+
+
+---------------------------
+
+Function getPropertySafe(fld As DAO.Field, propertyName As String) As Variant
+    On Error Resume Next
+    ' プロパティが存在しない場合はエラーを無視して空文字を返す
+    getPropertySafe = fld.Properties(propertyName)
+    If Err.Number <> 0 Then
+        getPropertySafe = Null ' プロパティがない場合はNullを返す
+        Err.Clear
+    End If
+    On Error GoTo 0
+End Function
+
+Sub saveAllTableAttributesWithErrorHandling()
+    Dim db As DAO.Database
+    Dim tbl As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim rst As DAO.Recordset
+    Dim newTable As DAO.TableDef
+    Dim newField As DAO.Field
+
+    ' データベースオブジェクトを取得
+    Set db = CurrentDb
+
+    ' 保存先テーブルの存在を確認し、存在しない場合は作成
+    On Error Resume Next
+    Set rst = db.OpenRecordset("tblAllTableAttributes")
+    If rst Is Nothing Then
+        ' テーブルを作成
+        Set newTable = db.CreateTableDef("tblAllTableAttributes")
+
+        ' 各属性フィールドを追加
+        newTable.Fields.Append newTable.CreateField("TableName", dbText, 255)
+        newTable.Fields.Append newTable.CreateField("FieldName", dbText, 255)
+        newTable.Fields.Append newTable.CreateField("FieldType", dbText, 50)
+        newTable.Fields.Append newTable.CreateField("FieldSize", dbLong)
+        newTable.Fields.Append newTable.CreateField("Required", dbBoolean)
+        newTable.Fields.Append newTable.CreateField("Indexed", dbText, 50)
+        newTable.Fields.Append newTable.CreateField("FieldFormat", dbText, 255)
+        newTable.Fields.Append newTable.CreateField("DefaultValue", dbText, 255)
+
+        db.TableDefs.Append newTable
+    End If
+    On Error GoTo 0
+
+    ' レコードセットを開く
+    Set rst = db.OpenRecordset("tblAllTableAttributes", dbOpenDynaset)
+
+    ' すべてのテーブルとそのフィールドをループ
+    For Each tbl In db.TableDefs
+        ' システムテーブルをスキップ
+        If Left(tbl.Name, 4) <> "MSys" Then
+            For Each fld In tbl.Fields
+                ' レコードセットに追加
+                rst.AddNew
+                rst!TableName = tbl.Name
+                rst!FieldName = fld.Name
+                rst!FieldType = FieldTypeName(fld.Type)
+                rst!FieldSize = Nz(fld.Size, 0)
+                rst!Required = fld.Attributes And dbAutoIncrField
+                rst!Indexed = getIndexInfo(tbl, fld.Name)
+                rst!FieldFormat = Nz(getPropertySafe(fld, "Format"), "")
+                rst!DefaultValue = Nz(getPropertySafe(fld, "DefaultValue"), "")
+                rst.Update
+            Next fld
+        End If
+    Next tbl
+
+    MsgBox "すべてのテーブルの詳細属性が保存されました。", vbInformation
+    rst.Close
+    Set rst = Nothing
+    Set db = Nothing
+End Sub
