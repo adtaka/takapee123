@@ -5149,3 +5149,205 @@ Sub saveAllTableAttributesWithErrorHandling()
     Set rst = Nothing
     Set db = Nothing
 End Sub
+
+
+
+
+★
+
+Sub CreateAndSaveFullTableSchemaWithEmptyStringsAllowed()
+    Dim db As DAO.Database
+    Dim tblDef As DAO.TableDef
+    Dim fldDef As DAO.Field
+    Dim tbl As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim rst As DAO.Recordset
+    Dim strSaveTable As String
+    Dim strTableName As String
+    Dim strFieldName As String
+    Dim strFieldType As String
+    Dim lngFieldSize As Long
+    Dim blnIsRequired As Boolean
+    Dim strDefaultValue As String
+    Dim strValidationRule As String
+    Dim strValidationText As String
+    Dim lngAttributes As Long
+    
+    ' 保存用テーブル名
+    strSaveTable = "tblFullSchemaInfo"
+    
+    ' データベースを取得
+    Set db = CurrentDb
+    
+    ' 保存用テーブルが存在する場合は削除
+    On Error Resume Next
+    Set tblDef = db.TableDefs(strSaveTable)
+    If Not tblDef Is Nothing Then
+        db.TableDefs.Delete strSaveTable
+        db.TableDefs.Refresh
+    End If
+    On Error GoTo 0
+    
+    ' 新しい保存用テーブルを作成
+    Set tblDef = db.CreateTableDef(strSaveTable)
+    
+    ' フィールドを追加（すべて空文字を許可）
+    With tblDef
+        Set fldDef = .CreateField("tableName", dbText, 255)
+        fldDef.AllowZeroLength = True
+        .Fields.Append fldDef
+        
+        Set fldDef = .CreateField("fieldName", dbText, 255)
+        fldDef.AllowZeroLength = True
+        .Fields.Append fldDef
+        
+        Set fldDef = .CreateField("fieldType", dbText, 50)
+        fldDef.AllowZeroLength = True
+        .Fields.Append fldDef
+        
+        Set fldDef = .CreateField("fieldSize", dbLong)
+        .Fields.Append fldDef ' 数値型は空文字の概念なし
+        
+        Set fldDef = .CreateField("isRequired", dbBoolean)
+        .Fields.Append fldDef ' ブール型は空文字の概念なし
+        
+        Set fldDef = .CreateField("defaultValue", dbText, 255)
+        fldDef.AllowZeroLength = True
+        .Fields.Append fldDef
+        
+        Set fldDef = .CreateField("validationRule", dbText, 255)
+        fldDef.AllowZeroLength = True
+        .Fields.Append fldDef
+        
+        Set fldDef = .CreateField("validationText", dbText, 255)
+        fldDef.AllowZeroLength = True
+        .Fields.Append fldDef
+        
+        Set fldDef = .CreateField("attributes", dbLong)
+        .Fields.Append fldDef ' 数値型は空文字の概念なし
+    End With
+    
+    ' 保存用テーブルをデータベースに追加
+    db.TableDefs.Append tblDef
+    
+    ' 保存用テーブルのレコードセットを開く
+    Set rst = db.OpenRecordset(strSaveTable, dbOpenDynaset)
+    
+    ' すべてのテーブルをループ
+    For Each tbl In db.TableDefs
+        ' システムテーブルはスキップ
+        If Left(tbl.Name, 4) <> "MSys" Then
+            strTableName = tbl.Name
+            
+            ' 各テーブルのフィールドをループ
+            For Each fld In tbl.Fields
+                strFieldName = fld.Name
+                strFieldType = FieldTypeToJapanese(fld.type)
+                lngFieldSize = 0 ' 初期化
+                
+                ' サイズが指定されている場合のみ取得
+                On Error Resume Next
+                lngFieldSize = fld.Size
+                On Error GoTo 0
+                
+                ' 必須かどうかを取得
+                blnIsRequired = fld.Required
+                
+                ' デフォルト値
+                strDefaultValue = Nz(fld.DefaultValue, "")
+                
+                ' バリデーションルールとテキスト
+                strValidationRule = Nz(fld.ValidationRule, "")
+                strValidationText = Nz(fld.ValidationText, "")
+                
+                ' 属性
+                lngAttributes = fld.Attributes
+                
+                ' データを保存
+                rst.AddNew
+                rst!tableName = strTableName
+                rst!fieldName = strFieldName
+                rst!fieldType = strFieldType
+                rst!FieldSize = lngFieldSize
+                rst!isRequired = blnIsRequired
+                rst!DefaultValue = strDefaultValue
+                rst!ValidationRule = strValidationRule
+                rst!ValidationText = strValidationText
+                rst!Attributes = lngAttributes
+                rst.Update
+            Next fld
+        End If
+    Next tbl
+    
+    ' 後処理
+    rst.Close
+    Set rst = Nothing
+    Set db = Nothing
+    
+    MsgBox "すべてのテーブルの属性が保存されました。", vbInformation
+End Sub
+
+
+
+' フィールドタイプを文字列に変換
+Function FieldTypeToString(fieldType As Integer) As String
+    Select Case fieldType
+        Case dbBoolean
+            FieldTypeToString = "Boolean"
+        Case dbByte
+            FieldTypeToString = "Byte"
+        Case dbInteger
+            FieldTypeToString = "Integer"
+        Case dbLong
+            FieldTypeToString = "Long"
+        Case dbCurrency
+            FieldTypeToString = "Currency"
+        Case dbSingle
+            FieldTypeToString = "Single"
+        Case dbDouble
+            FieldTypeToString = "Double"
+        Case dbDate
+            FieldTypeToString = "Date"
+        Case dbText
+            FieldTypeToString = "Text"
+        Case dbLongBinary
+            FieldTypeToString = "LongBinary"
+        Case dbMemo
+            FieldTypeToString = "Memo"
+        Case dbGUID
+            FieldTypeToString = "GUID"
+        Case Else
+            FieldTypeToString = "Other"
+    End Select
+End Function
+
+Function FieldTypeToJapanese(fieldType As Integer) As String
+    Select Case fieldType
+        Case dbBoolean
+            FieldTypeToJapanese = "真偽値"
+        Case dbByte
+            FieldTypeToJapanese = "バイト"
+        Case dbInteger
+            FieldTypeToJapanese = "整数"
+        Case dbLong
+            FieldTypeToJapanese = "長整数"
+        Case dbCurrency
+            FieldTypeToJapanese = "通貨"
+        Case dbSingle
+            FieldTypeToJapanese = "単精度浮動小数点"
+        Case dbDouble
+            FieldTypeToJapanese = "倍精度浮動小数点"
+        Case dbDate
+            FieldTypeToJapanese = "日付/時刻"
+        Case dbText
+            FieldTypeToJapanese = "テキスト"
+        Case dbLongBinary
+            FieldTypeToJapanese = "長バイナリ"
+        Case dbMemo
+            FieldTypeToJapanese = "メモ"
+        Case dbGUID
+            FieldTypeToJapanese = "GUID"
+        Case Else
+            FieldTypeToJapanese = "その他"
+    End Select
+End Function
