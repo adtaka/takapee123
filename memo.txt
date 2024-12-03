@@ -4955,3 +4955,119 @@ Sub detectUnusedProcedures()
 
     MsgBox "未使用のプロシージャ一覧をテーブル 'UnusedProcedures' に保存しました。", vbInformation
 End Sub
+
+
+すべの属性
+
+Sub saveAllTableAttributesComplete()
+    Dim db As DAO.Database
+    Dim tbl As DAO.TableDef
+    Dim fld As DAO.Field
+    Dim rst As DAO.Recordset
+    Dim newTable As DAO.TableDef
+    Dim newField As DAO.Field
+
+    ' データベースオブジェクトを取得
+    Set db = CurrentDb
+
+    ' 保存先テーブルの存在を確認し、存在しない場合は作成
+    On Error Resume Next
+    Set rst = db.OpenRecordset("tblAllTableAttributes")
+    If rst Is Nothing Then
+        ' テーブルを作成
+        Set newTable = db.CreateTableDef("tblAllTableAttributes")
+
+        ' 各属性フィールドを追加
+        newTable.Fields.Append newTable.CreateField("TableName", dbText, 255)
+        newTable.Fields.Append newTable.CreateField("FieldName", dbText, 255)
+        newTable.Fields.Append newTable.CreateField("FieldType", dbText, 50)
+        newTable.Fields.Append newTable.CreateField("FieldSize", dbLong)
+        newTable.Fields.Append newTable.CreateField("Required", dbBoolean)
+        newTable.Fields.Append newTable.CreateField("Indexed", dbText, 50)
+        newTable.Fields.Append newTable.CreateField("FieldFormat", dbText, 255)
+        newTable.Fields.Append newTable.CreateField("DefaultValue", dbText, 255)
+
+        db.TableDefs.Append newTable
+    End If
+    On Error GoTo 0
+
+    ' レコードセットを開く
+    Set rst = db.OpenRecordset("tblAllTableAttributes", dbOpenDynaset)
+
+    ' すべてのテーブルとそのフィールドをループ
+    For Each tbl In db.TableDefs
+        ' システムテーブルをスキップ
+        If Left(tbl.Name, 4) <> "MSys" Then
+            For Each fld In tbl.Fields
+                ' レコードセットに追加
+                rst.AddNew
+                rst!TableName = tbl.Name
+                rst!FieldName = fld.Name
+                rst!FieldType = FieldTypeName(fld.Type)
+                rst!FieldSize = Nz(fld.Size, 0)
+                rst!Required = fld.Attributes And dbAutoIncrField
+                rst!Indexed = getIndexInfo(tbl, fld.Name)
+                rst!FieldFormat = Nz(fld.Properties("Format"), "")
+                rst!DefaultValue = Nz(fld.Properties("DefaultValue"), "")
+                rst.Update
+            Next fld
+        End If
+    Next tbl
+
+    MsgBox "すべてのテーブルの詳細属性が保存されました。", vbInformation
+    rst.Close
+    Set rst = Nothing
+    Set db = Nothing
+End Sub
+
+Function FieldTypeName(intType As Integer) As String
+    ' フィールドの型を日本語で返す
+    Select Case intType
+        Case dbBoolean
+            FieldTypeName = "はい/いいえ"
+        Case dbByte
+            FieldTypeName = "バイト"
+        Case dbInteger
+            FieldTypeName = "整数"
+        Case dbLong
+            FieldTypeName = "長整数"
+        Case dbCurrency
+            FieldTypeName = "通貨"
+        Case dbSingle
+            FieldTypeName = "単精度浮動小数点"
+        Case dbDouble
+            FieldTypeName = "倍精度浮動小数点"
+        Case dbDate
+            FieldTypeName = "日付/時刻"
+        Case dbText
+            FieldTypeName = "テキスト"
+        Case dbLongBinary
+            FieldTypeName = "OLEオブジェクト"
+        Case dbMemo
+            FieldTypeName = "長いテキスト"
+        Case dbGUID
+            FieldTypeName = "GUID"
+        Case Else
+            FieldTypeName = "不明な型"
+    End Select
+End Function
+
+Function getIndexInfo(tbl As DAO.TableDef, fieldName As String) As String
+    Dim idx As DAO.Index
+    Dim fld As DAO.Field
+
+    On Error Resume Next
+    For Each idx In tbl.Indexes
+        For Each fld In idx.Fields
+            If fld.Name = fieldName Then
+                If idx.Unique Then
+                    getIndexInfo = "一意"
+                Else
+                    getIndexInfo = "インデックスあり"
+                End If
+                Exit Function
+            End If
+        Next fld
+    Next idx
+    getIndexInfo = "なし"
+End Function
