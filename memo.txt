@@ -5351,3 +5351,29 @@ Function FieldTypeToJapanese(fieldType As Integer) As String
             FieldTypeToJapanese = "その他"
     End Select
 End Function
+
+
+
+
+
+
+
+
+
+
+Sub subSampleErrorHandling()
+    On Error GoTo ErrHandler ' エラーハンドラーを設定
+
+    ' 主処理
+    Dim intResult As Integer
+    intResult = 10 / 0 ' 意図的にエラーを発生させる
+
+    Exit Sub ' エラーハンドラーを通過しないようにする
+
+ErrHandler:
+    ' エラーメッセージを表示
+    MsgBox "エラー番号: " & Err.Number & vbCrLf & _
+           "説明: " & Err.Description, vbCritical, "エラー発生"
+    ' 必要に応じてエラーをクリア
+    Err.Clear
+End Sub
