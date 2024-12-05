@@ -5525,3 +5525,31 @@ Sub createTableWithoutSQL()
     
     MsgBox "テーブル '" & newTableName & "' を作成しました。", vbInformation
 End Sub
+
+
+Function validateFieldName(originalName As String) As String
+    Dim validName As String
+    Dim i As Integer
+    Dim charCode As Integer
+    Dim validChars As String
+    
+    ' 有効な文字列にする（英数字とアンダースコアのみを許可）
+    validName = ""
+    validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
+    
+    For i = 1 To Len(originalName)
+        charCode = Asc(Mid(originalName, i, 1))
+        If InStr(validChars, Mid(originalName, i, 1)) > 0 Then
+            validName = validName & Mid(originalName, i, 1)
+        Else
+            validName = validName & "_" ' 無効な文字をアンダースコアに置き換え
+        End If
+    Next i
+    
+    ' 修正後の名前が空の場合は無効
+    If Len(Trim(validName)) = 0 Then
+        validateFieldName = ""
+    Else
+        validateFieldName = validName
+    End If
+End Function
