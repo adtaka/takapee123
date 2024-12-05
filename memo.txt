@@ -5553,3 +5553,37 @@ Function validateFieldName(originalName As String) As String
         validateFieldName = validName
     End If
 End Function
+
+
+
+せせせせせせせせせせせせせせせせせせせせせせ
+
+Function validateFieldName(originalName As String) As String
+    Dim validName As String
+    Dim i As Integer
+    Dim charCode As Integer
+    
+    ' 有効な文字列にする（英数字、アンダースコア、2バイト文字を許可）
+    validName = ""
+    For i = 1 To Len(originalName)
+        charCode = AscW(Mid(originalName, i, 1))
+        
+        ' 英数字またはアンダースコアを許可
+        If (charCode >= 48 And charCode <= 57) Or _ ' 数字
+           (charCode >= 65 And charCode <= 90) Or _ ' 英大文字
+           (charCode >= 97 And charCode <= 122) Or _ ' 英小文字
+           (charCode = 95) Or _ ' アンダースコア
+           (charCode > 255) Then ' 2バイト文字
+            validName = validName & Mid(originalName, i, 1)
+        Else
+            validName = validName & "_" ' 無効な文字をアンダースコアに置き換え
+        End If
+    Next i
+    
+    ' 修正後の名前が空の場合は "Field_<連番>" を自動設定
+    If Len(Trim(validName)) = 0 Then
+        validName = "Field_" & Format(Int((9999 - 1000 + 1) * Rnd + 1000), "0000")
+    End If
+    
+    validateFieldName = validName
+End Function
