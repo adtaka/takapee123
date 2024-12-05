@@ -5404,3 +5404,34 @@ Function fncIsValidDate(strDate As String) As Boolean
     End If
     On Error GoTo 0
 End Function
+
+
+Sub subGetMessageValues()
+    Dim db As DAO.Database
+    Dim rs As DAO.Recordset
+    Dim strSql As String
+    Dim strMessage As String
+    
+    ' データベースを現在のDBに設定
+    Set db = CurrentDb
+    
+    ' SQLクエリの作成
+    strSql = "SELECT MessageText FROM tblMessage WHERE MessageID = 1" ' 条件を適宜変更
+    
+    ' レコードセットを開く
+    Set rs = db.OpenRecordset(strSql, dbOpenSnapshot)
+    
+    ' レコードが存在する場合、値を取得
+    If Not rs.EOF Then
+        strMessage = rs!MessageText
+        MsgBox "取得したメッセージ: " & strMessage
+    Else
+        MsgBox "該当するレコードが見つかりません。"
+    End If
+    
+    ' 後処理
+    rs.Close
+    Set rs = Nothing
+    Set db = Nothing
+End Sub
+
