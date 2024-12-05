@@ -5459,3 +5459,69 @@ Sub sumCommaSeparatedValues()
     MsgBox "カンマ区切り文字列の合計は: " & intSum
 End Sub
 
+
+
+Sub createTableWithoutSQL()
+    Dim db As DAO.Database
+    Dim tableDef As DAO.TableDef
+    Dim field As DAO.Field
+    Dim rs As DAO.Recordset
+    
+    ' 使用するデータベースを取得
+    Set db = CurrentDb
+    
+    ' テーブル定義が格納されているテーブル名
+    Dim definitionTableName As String
+    definitionTableName = "テーブル定義" ' 定義テーブル名を指定
+    
+    ' 新しく作成するテーブル名
+    Dim newTableName As String
+    newTableName = "新しいテーブル"
+    
+    ' すでに存在する場合は削除
+    On Error Resume Next
+    db.TableDefs.Delete newTableName
+    On Error GoTo 0
+    
+    ' 新しいテーブルを作成
+    Set tableDef = db.CreateTableDef(newTableName)
+    
+    ' 定義テーブルから項目名、データ型、桁数を取得
+    Set rs = db.OpenRecordset("SELECT 項目名, データ型, 桁数 FROM " & definitionTableName)
+    Do While Not rs.EOF
+        Dim fieldName As String
+        Dim fieldType As String
+        Dim fieldSize As Integer
+        
+        fieldName = rs!項目名
+        fieldType = rs!データ型
+        fieldSize = Nz(rs!桁数, 0)
+        
+        ' データ型に応じてフィールドを作成
+        Select Case fieldType
+            Case "テキスト"
+                Set field = tableDef.CreateField(fieldName, dbText, fieldSize)
+            Case "数値"
+                Set field = tableDef.CreateField(fieldName, dbDouble)
+            Case "日付"
+                Set field = tableDef.CreateField(fieldName, dbDate)
+            Case "Yes/No"
+                Set field = tableDef.CreateField(fieldName, dbBoolean)
+            Case Else
+                MsgBox "未知のデータ型: " & fieldType, vbExclamation
+                rs.Close
+                Exit Sub
+        End Select
+        
+        ' フィールドをテーブルに追加
+        tableDef.Fields.Append field
+        
+        rs.MoveNext
+    Loop
+    rs.Close
+    
+    ' テーブルをデータベースに追加
+    db.TableDefs.Append tableDef
+    
+    MsgBox "テーブル '" & newTableName & "' を作成しました。", vbInformation
+End Sub
