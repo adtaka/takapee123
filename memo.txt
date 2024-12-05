@@ -5377,3 +5377,30 @@ ErrHandler:
     ' 必要に応じてエラーをクリア
     Err.Clear
 End Sub
+
+
+
+
+Function fncIsValidDate(strDate As String) As Boolean
+    Dim dteParsed As Date
+    
+    ' 初期値として False を設定
+    fncIsValidDate = False
+    
+    ' 入力文字列が8桁であることを確認
+    If Len(strDate) <> 8 Then Exit Function
+    
+    ' 年、月、日をそれぞれ抽出
+    On Error Resume Next
+    Dim intYear As Integer, intMonth As Integer, intDay As Integer
+    intYear = CInt(Left(strDate, 4))
+    intMonth = CInt(Mid(strDate, 5, 2))
+    intDay = CInt(Right(strDate, 2))
+    
+    ' 日付を試しに作成してエラーがなければ True を返す
+    dteParsed = DateSerial(intYear, intMonth, intDay)
+    If Err.Number = 0 Then
+        fncIsValidDate = True
+    End If
+    On Error GoTo 0
+End Function
