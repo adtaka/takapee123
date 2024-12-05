@@ -5587,3 +5587,53 @@ Function validateFieldName(originalName As String) As String
     
     validateFieldName = validName
 End Function
+
+
+
+Function fncIsValidFieldName(strFieldName As String) As Boolean
+    Dim strInvalidChars As String
+    Dim i As Integer
+    Dim chrCheck As String
+    Dim strReservedWords As String
+    Dim arrReservedWords() As String
+    Dim varWord As Variant
+    
+    ' 使用禁止文字リスト（公式ガイドに基づく）
+    strInvalidChars = "!.[]'""#&/*%|:;<>?= "
+
+    ' 予約語リスト（必要に応じて拡張可能）
+    strReservedWords = "SELECT,FROM,WHERE,JOIN,DATE,NAME,INDEX,ORDER,GROUP,TABLE,UNION"
+    arrReservedWords = Split(strReservedWords, ",")
+
+    ' 先頭または末尾が空白の場合は無効
+    If Trim(strFieldName) <> strFieldName Then
+        fncIsValidFieldName = False
+        Exit Function
+    End If
+
+    ' 禁止文字を含むかチェック
+    For i = 1 To Len(strInvalidChars)
+        chrCheck = Mid(strInvalidChars, i, 1)
+        If InStr(1, strFieldName, chrCheck, vbBinaryCompare) > 0 Then
+            fncIsValidFieldName = False
+            Exit Function
+        End If
+    Next i
+
+    ' 予約語との一致をチェック
+    For Each varWord In arrReservedWords
+        If StrComp(strFieldName, varWord, vbTextCompare) = 0 Then
+            fncIsValidFieldName = False
+            Exit Function
+        End If
+    Next varWord
+
+    ' フィールド名が数値のみの場合も無効
+    If IsNumeric(strFieldName) Then
+        fncIsValidFieldName = False
+        Exit Function
+    End If
+
+    ' 使用可能である場合
+    fncIsValidFieldName = True
+End Function
