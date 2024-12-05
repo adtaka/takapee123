@@ -5435,3 +5435,27 @@ Sub subGetMessageValues()
     Set db = Nothing
 End Sub
 
+
+Sub sumCommaSeparatedValues()
+    ' カンマ区切り文字列を定義
+    Dim strInput As String
+    strInput = "10,20,30,40,50"
+    
+    ' 文字列を分割して配列に変換
+    Dim arrNumbers() As String
+    arrNumbers = Split(strInput, ",")
+    
+    ' 合計を計算する変数を初期化
+    Dim intSum As Integer
+    intSum = 0
+    
+    ' 配列の要素を順に合計
+    Dim i As Integer
+    For i = LBound(arrNumbers) To UBound(arrNumbers)
+        intSum = intSum + CInt(arrNumbers(i))
+    Next i
+    
+    ' 結果を表示
+    MsgBox "カンマ区切り文字列の合計は: " & intSum
+End Sub
+
