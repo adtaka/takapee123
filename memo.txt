@@ -5637,3 +5637,8 @@ Function fncIsValidFieldName(strFieldName As String) As Boolean
     ' 使用可能である場合
     fncIsValidFieldName = True
 End Function
+
+
+' オートナンバー型のフィールドを追加
+    tdf.Fields.Append tdf.CreateField("ID", dbLong)
+    tdf.Fields("ID").Attributes = dbAutoIncrField ' オートナンバー化
