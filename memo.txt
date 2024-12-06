@@ -5740,3 +5740,60 @@ Sub ExportSQLToCSV_UTF8_WithFileNameOnly(fileName As String)
     MsgBox "SQL結果のCSVをUTF-8でエクスポートしました！", vbInformation
 End Sub
 
+
+Sub prcExportSQLToCSV(strOutputFolder As String, strFileName As String, strSQLQuery As String)
+    Dim strTempFilePath As String
+    Dim strOutputFilePath As String
+    Dim strQueryName As String
+
+    ' フォルダの末尾に "\" を補完
+    If Right(strOutputFolder, 1) <> "\" Then
+        strOutputFolder = strOutputFolder & "\"
+    End If
+
+    ' ファイルパスの設定
+    strOutputFilePath = strOutputFolder & strFileName
+    strTempFilePath = strOutputFolder & "TempFile.csv"
+
+    ' 一時クエリ名
+    strQueryName = "TempQuery"
+
+    ' 一時クエリを作成
+    On Error Resume Next
+    CurrentDb.QueryDefs.Delete strQueryName ' 既存の一時クエリを削除
+    On Error GoTo 0
+    CurrentDb.CreateQueryDef strQueryName, strSQLQuery
+
+    ' クエリ結果を一時ファイルにエクスポート（ANSIエンコード）
+    DoCmd.TransferText acExportDelim, , strQueryName, strTempFilePath, True
+
+    ' 一時クエリを削除
+    CurrentDb.QueryDefs.Delete strQueryName
+
+    ' UTF-8に変換
+    Call prcConvertToUTF8(strTempFilePath, strOutputFilePath)
+
+    ' 一時ファイルを削除
+    Kill strTempFilePath
+
+    MsgBox "SQL結果のCSVをUTF-8でエクスポートしました！", vbInformation
+End Sub
+
+
+Sub prcConvertToUTF8(strInputFilePath As String, strOutputFilePath As String)
+    Dim objAdoStream As Object
+
+    ' ADO StreamでUTF-8に変換
+    Set objAdoStream = CreateObject("ADODB.Stream")
+    objAdoStream.Type = 2 ' テキストモード
+    objAdoStream.Charset = "UTF-8" ' UTF-8エンコード
+    objAdoStream.Open
+    objAdoStream.LoadFromFile strInputFilePath ' 入力ファイルをロード
+    objAdoStream.SaveToFile strOutputFilePath, 2 ' UTF-8エンコードで保存（上書き）
+
+    ' リソースを解放
+    objAdoStream.Close
+    Set objAdoStream = Nothing
+End Sub
+
+
