@@ -5642,3 +5642,44 @@ End Function
 ' オートナンバー型のフィールドを追加
     tdf.Fields.Append tdf.CreateField("ID", dbLong)
     tdf.Fields("ID").Attributes = dbAutoIncrField ' オートナンバー化
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    Sub ExportSQLToCSV()
+    Dim sqlQuery As String
+    Dim filePath As String
+    Dim queryName As String
+
+    ' SQL文
+    sqlQuery = "SELECT * FROM YourTable WHERE Condition = 'Value'" ' 任意のSQL文に置き換えてください
+
+    ' 一時クエリ名
+    queryName = "TempQuery"
+
+    ' 保存先のCSVファイルパス
+    filePath = "C:\YourFolder\YourFile.csv" ' 保存先のパスを指定してください
+
+    ' 一時クエリを作成
+    CurrentDb.QueryDefs.Delete queryName ' 既存の一時クエリを削除（存在しない場合はエラーを無視）
+    On Error Resume Next
+    CurrentDb.CreateQueryDef queryName, sqlQuery
+    On Error GoTo 0
+
+    ' クエリの結果をCSVにエクスポート
+    DoCmd.TransferText acExportDelim, , queryName, filePath, True
+
+    ' 一時クエリを削除
+    CurrentDb.QueryDefs.Delete queryName
+
+    MsgBox "SQL結果のCSVエクスポートが完了しました！", vbInformation
+End Sub
