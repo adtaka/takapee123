@@ -5921,3 +5921,39 @@ End Sub
 
 
 
+のののののののののののののののののののののの
+
+
+
+Sub prcConvertToUTF8(strInputFilePath As String, strOutputFilePath As String)
+    Dim objAdoStream As Object
+    Dim objUtf8Stream As Object
+
+    ' Shift-JISファイルをロード
+    Set objAdoStream = CreateObject("ADODB.Stream")
+    objAdoStream.Type = 2 ' テキストモード
+    objAdoStream.Charset = "Shift_JIS" ' 日本語環境での既存エンコードを指定
+    objAdoStream.Open
+    objAdoStream.LoadFromFile strInputFilePath ' 入力ファイルを読み込む
+
+    ' 読み込んだデータをUTF-8エンコードに変換
+    Set objUtf8Stream = CreateObject("ADODB.Stream")
+    objUtf8Stream.Type = 2 ' テキストモード
+    objUtf8Stream.Charset = "UTF-8" ' UTF-8エンコードに変換
+    objUtf8Stream.Open
+    objUtf8Stream.WriteText objAdoStream.ReadText ' データをUTF-8に変換して書き込む
+
+    ' BOMなしで保存するため、バイナリモードで再保存
+    Set objAdoStream = CreateObject("ADODB.Stream")
+    objAdoStream.Type = 1 ' バイナリモード
+    objAdoStream.Open
+    objUtf8Stream.Position = 0 ' ストリームの先頭に移動
+    objUtf8Stream.CopyTo objAdoStream ' UTF-8ストリームをバイナリストリームにコピー
+    objAdoStream.SaveToFile strOutputFilePath, 2 ' 上書き保存
+
+    ' リソース解放
+    objUtf8Stream.Close
+    objAdoStream.Close
+    Set objUtf8Stream = Nothing
+    Set objAdoStream = Nothing
+End Sub
