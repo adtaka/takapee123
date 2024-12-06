@@ -5797,3 +5797,31 @@ Sub prcConvertToUTF8(strInputFilePath As String, strOutputFilePath As String)
 End Sub
 
 
+Sub prcConvertToUTF8(strInputFilePath As String, strOutputFilePath As String)
+    Dim objAdoStream As Object
+    Dim objBinaryStream As Object
+
+    ' テキストモードで読み込み
+    Set objAdoStream = CreateObject("ADODB.Stream")
+    objAdoStream.Type = 2 ' テキストモード
+    objAdoStream.Charset = "UTF-8" ' UTF-8エンコード
+    objAdoStream.Open
+    objAdoStream.LoadFromFile strInputFilePath ' 入力ファイルをロード
+
+    ' バイナリモードで書き込み（BOMを除去）
+    Set objBinaryStream = CreateObject("ADODB.Stream")
+    objBinaryStream.Type = 1 ' バイナリモード
+    objBinaryStream.Open
+    objAdoStream.Position = 3 ' UTF-8 BOMをスキップ (最初の3バイト)
+    objAdoStream.CopyTo objBinaryStream
+    objBinaryStream.SaveToFile strOutputFilePath, 2 ' 上書き保存
+
+    ' リソースを解放
+    objAdoStream.Close
+    objBinaryStream.Close
+    Set objAdoStream = Nothing
+    Set objBinaryStream = Nothing
+End Sub
+
+
+
