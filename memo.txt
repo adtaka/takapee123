@@ -5683,3 +5683,60 @@ End Function
 
     MsgBox "SQL結果のCSVエクスポートが完了しました！", vbInformation
 End Sub
+
+
+
+
+Sub ExportSQLToCSV_UTF8_WithFileNameOnly(fileName As String)
+    Dim sqlQuery As String
+    Dim outputFilePath As String
+    Dim tempFilePath As String
+    Dim queryName As String
+    Dim adoStream As Object
+    Dim outputFolder As String
+
+    ' 固定の出力フォルダ
+    outputFolder = "C:\YourFolder\" ' 必要に応じて変更
+
+    ' 出力ファイルのフルパスを構築
+    outputFilePath = outputFolder & fileName
+
+    ' 一時ファイルパス（ANSIエンコードで一時的に保存）
+    tempFilePath = outputFolder & "TempFile.csv"
+
+    ' SQL文（固定または調整可能）
+    sqlQuery = "SELECT * FROM YourTable WHERE Condition = 'Value'" ' 任意のSQL文に変更可能
+
+    ' 一時クエリ名
+    queryName = "TempQuery"
+
+    ' 一時クエリを作成
+    On Error Resume Next
+    CurrentDb.QueryDefs.Delete queryName ' 既存の一時クエリを削除
+    On Error GoTo 0
+    CurrentDb.CreateQueryDef queryName, sqlQuery
+
+    ' クエリ結果を一時ファイルにエクスポート（ANSIエンコード）
+    DoCmd.TransferText acExportDelim, , queryName, tempFilePath, True
+
+    ' 一時クエリを削除
+    CurrentDb.QueryDefs.Delete queryName
+
+    ' ADO StreamでUTF-8に変換
+    Set adoStream = CreateObject("ADODB.Stream")
+    adoStream.Type = 2 ' テキストモード
+    adoStream.Charset = "UTF-8" ' UTF-8エンコード
+    adoStream.Open
+    adoStream.LoadFromFile tempFilePath ' 一時ファイルをロード
+    adoStream.SaveToFile outputFilePath, 2 ' UTF-8エンコードで保存（上書き）
+
+    ' 一時ファイルを削除
+    Kill tempFilePath
+
+    ' リソースを解放
+    adoStream.Close
+    Set adoStream = Nothing
+
+    MsgBox "SQL結果のCSVをUTF-8でエクスポートしました！", vbInformation
+End Sub
+
