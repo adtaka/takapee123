@@ -5990,3 +5990,34 @@ Sub prcConvertToUTF8(strInputFilePath As String, strOutputFilePath As String)
     Set objUtf8Stream = Nothing
     Set objAdoStream = Nothing
 End Sub
+
+
+
+Sub deleteTableIfExists(tableName As String)
+    Dim db As DAO.Database
+    Dim tblDef As DAO.TableDef
+    Dim tableExists As Boolean
+
+    On Error Resume Next
+    Set db = CurrentDb
+    tableExists = False
+    
+    ' テーブルの存在を確認
+    For Each tblDef In db.TableDefs
+        If tblDef.Name = tableName Then
+            tableExists = True
+            Exit For
+        End If
+    Next tblDef
+    
+    ' テーブルが存在すれば削除
+    If tableExists Then
+        db.TableDefs.Delete tableName
+        MsgBox "テーブル '" & tableName & "' を削除しました。", vbInformation
+    Else
+        MsgBox "テーブル '" & tableName & "' は存在しません。", vbExclamation
+    End If
+    
+    Set tblDef = Nothing
+    Set db = Nothing
+End Sub
