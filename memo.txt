@@ -6021,3 +6021,20 @@ Sub deleteTableIfExists(tableName As String)
     Set tblDef = Nothing
     Set db = Nothing
 End Sub
+
+
+Function fncCountCellsByColor(targetRange As Range, targetColor As Long) As Long
+    Dim cell As Range
+    Dim count As Long
+    
+    count = 0
+    
+    ' 範囲内の各セルを確認
+    For Each cell In targetRange
+        If cell.Interior.Color = targetColor Then
+            count = count + 1
+        End If
+    Next cell
+    
+    fncCountCellsByColor = count
+End Function
