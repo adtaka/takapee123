@@ -6038,3 +6038,7 @@ Function fncCountCellsByColor(targetRange As Range, targetColor As Long) As Long
     
     fncCountCellsByColor = count
 End Function
+
+Function fncCeilingVBA(dblValue As Double, dblUnit As Double) As Double
+    fncCeilingVBA = -Int(-dblValue / dblUnit) * dblUnit
+End Functio
