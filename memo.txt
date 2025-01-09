@@ -6042,3 +6042,32 @@ End Function
 Function fncCeilingVBA(dblValue As Double, dblUnit As Double) As Double
     fncCeilingVBA = -Int(-dblValue / dblUnit) * dblUnit
 End Functio
+
+Sub subCloseAllRecordsets()
+    Dim db As DAO.Database
+    Dim rst As DAO.Recordset
+
+    ' 現在のデータベースを取得
+    Set db = CurrentDb
+
+    ' データベースのTableDefsからRecordsetを取得し閉じる
+    Dim tblDef As DAO.TableDef
+    For Each tblDef In db.TableDefs
+        If tblDef.Name Like "MSys*" = False Then ' システムテーブルを除外
+            On Error Resume Next ' エラー処理を一時的に無視
+            Set rst = tblDef.OpenRecordset
+            If Not rst Is Nothing Then
+                If rst.State = 1 Then ' 開いている場合のみ
+                    rst.Close
+                End If
+                Set rst = Nothing
+            End If
+            On Error GoTo 0 ' エラー処理を戻す
+        End If
+    Next tblDef
+
+    ' オブジェクトの解放
+    Set db = Nothing
+
+    MsgBox "すべてのRecordsetが閉じられました。"
+End Sub
