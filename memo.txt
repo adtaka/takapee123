@@ -6103,3 +6103,51 @@ Sub subCloseAllRecordsets()
 
     MsgBox "すべてのRecordsetが閉じられました。"
 End Sub
+
+Sub subCreateEmptyTextFile()
+    Dim objFSO As Object
+    Dim objFile As Object
+    Dim strFilePath As String
+    
+    ' ファイルパスを指定
+    strFilePath = "C:\Temp\emptyFile.txt"
+    
+    ' FileSystemObjectの作成
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    
+    ' 空のテキストファイルを作成
+    Set objFile = objFSO.CreateTextFile(strFilePath, True)
+    
+    ' ファイルを閉じる
+    objFile.Close
+    
+    ' オブジェクトの解放
+    Set objFile = Nothing
+    Set objFSO = Nothing
+End Sub
+
+
+
+
+
+Sub subDeleteFile()
+    Dim objFSO As Object
+    Dim strFilePath As String
+    
+    ' 削除するファイルのパス
+    strFilePath = "C:\Temp\sampleFile.txt"
+    
+    ' FileSystemObjectの作成
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    
+    ' ファイルが存在する場合のみ削除
+    If objFSO.FileExists(strFilePath) Then
+        objFSO.DeleteFile strFilePath
+        MsgBox "ファイルを削除しました。", vbInformation
+    Else
+        MsgBox "ファイルが存在しません。", vbExclamation
+    End If
+    
+    ' オブジェクトの解放
+    Set objFSO = Nothing
+End Sub
