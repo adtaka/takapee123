@@ -6151,3 +6151,33 @@ Sub subDeleteFile()
     ' オブジェクトの解放
     Set objFSO = Nothing
 End Sub
+
+
+Sub subOptimizeCurrentDatabase()
+    Dim strSourcePath As String
+    Dim strBackupPath As String
+    Dim strTempPath As String
+    Dim blnResult As Boolean
+    
+    ' 現在のデータベースファイルパス
+    strSourcePath = CurrentDb.Name
+    
+    ' 一時ファイルとバックアップファイルのパス
+    strTempPath = Left(strSourcePath, InStrRev(strSourcePath, ".")) & "temp.accdb"
+    strBackupPath = Left(strSourcePath, InStrRev(strSourcePath, ".")) & "backup.accdb"
+    
+    ' 元ファイルのバックアップを作成
+    FileCopy strSourcePath, strBackupPath
+    
+    ' 圧縮と修復の実行
+    blnResult = Application.CompactRepair(SourceFile:=strSourcePath, DestinationFile:=strTempPath, LogFile:=False)
+    
+    If blnResult Then
+        ' 最適化が成功した場合、元ファイルを削除し、一時ファイルを元の場所に戻す
+        Kill strSourcePath
+        Name strTempPath As strSourcePath
+        MsgBox "データベースの最適化が完了しました。", vbInformation
+    Else
+        MsgBox "最適化に失敗しました。バックアップファイルをご確認ください。", vbExclamation
+    End If
+End Sub
