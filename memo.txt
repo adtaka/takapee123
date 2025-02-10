@@ -6292,3 +6292,16 @@ Function fncNthWeekdayOfMonth(dteTarget As Date, intWeekday As Integer, intNth A
     ' 指定した「第〇」番目の曜日を取得
     fncNthWeekdayOfMonth = dteFirstTargetWeekday + (intNth - 1) * 7
 End Function
+
+
+vba プロシージャ名を文字列で
+
+Dim obj As Object
+Set obj = New clsTest ' クラスモジュール clsTest のインスタンス
+
+CallByName obj, "fncSample", VbMethod
+
+
+Public Sub fncSample()
+    MsgBox "呼び出されました！"
+End Sub
