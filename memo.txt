@@ -6277,3 +6277,18 @@ End Sub
 │   │
 │   ├── 03_シナリオテスト/
 │    
+
+
+Function fncNthWeekdayOfMonth(dteTarget As Date, intWeekday As Integer, intNth As Integer) As Date
+    Dim dteFirstDay As Date
+    Dim dteFirstTargetWeekday As Date
+    
+    ' その月の1日を取得
+    dteFirstDay = DateSerial(Year(dteTarget), Month(dteTarget), 1)
+    
+    ' その月の最初の指定した曜日を取得
+    dteFirstTargetWeekday = dteFirstDay + (intWeekday - Weekday(dteFirstDay, vbSunday) + 7) Mod 7
+    
+    ' 指定した「第〇」番目の曜日を取得
+    fncNthWeekdayOfMonth = dteFirstTargetWeekday + (intNth - 1) * 7
+End Function
