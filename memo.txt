@@ -6279,6 +6279,8 @@ End Sub
 │    
 
 
+1. CallByName を使用する（クラスモジュール限定）
+
 Function fncNthWeekdayOfMonth(dteTarget As Date, intWeekday As Integer, intNth As Integer) As Date
     Dim dteFirstDay As Date
     Dim dteFirstTargetWeekday As Date
@@ -6304,4 +6306,32 @@ CallByName obj, "fncSample", VbMethod
 
 Public Sub fncSample()
     MsgBox "呼び出されました！"
+End Sub
+
+
+2. Application.Run を使用する
+Sub main()
+    Dim strProc As String
+    strProc = "subTest"
+    
+    Application.Run strProc
+End Sub
+
+Sub subTest()
+    MsgBox "subTest が実行されました！"
+End Sub
+
+Application.Run はパブリックなプロシージャしか実行できない。
+
+ub main()
+    Dim strProc As String
+    strProc = "subTest"
+
+    On Error Resume Next
+    Application.Run strProc
+    If Err.Number <> 0 Then
+        MsgBox "プロシージャが見つかりません: " & strProc
+        Err.Clear
+    End If
+    On Error GoTo 0
 End Sub
