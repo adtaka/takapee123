@@ -6335,3 +6335,32 @@ ub main()
     End If
     On Error GoTo 0
 End Sub
+
+Sub subCreateSubFolders(strFolderPath As String)
+    Dim objFSO As Object
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    
+    ' フォルダがすでに存在する場合は何もしない
+    If objFSO.FolderExists(strFolderPath) Then Exit Sub
+    
+    ' 親フォルダを取得
+    Dim strParentFolder As String
+    strParentFolder = objFSO.GetParentFolderName(strFolderPath)
+    
+    ' 親フォルダが存在しない場合は、再帰的に作成
+    If Not objFSO.FolderExists(strParentFolder) Then
+        subCreateSubFolders strParentFolder
+    End If
+    
+    ' フォルダを作成
+    objFSO.CreateFolder strFolderPath
+End Sub
+
+
+Sub subTestCreateSubFolders()
+    Dim strTargetPath As String
+    strTargetPath = "C:\Test\SubFolder1\SubFolder2\SubFolder3"
+    
+    ' 指定パスのフォルダを再帰的に作成
+    subCreateSubFolders strTargetPath
+End Sub
