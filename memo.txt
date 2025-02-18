@@ -6408,3 +6408,36 @@ Sub subCopyFilesByExtension()
 
     MsgBox "コピーが完了しました。", vbInformation
 End Sub
+
+
+
+Option Compare Database
+Option Explicit
+
+Sub subExportAllModules()
+    Dim objVBE As Object
+    Dim objVBProj As Object
+    Dim objVBComp As Object
+    Dim strExportPath As String
+    Dim strModuleName As String
+
+    ' エクスポート先フォルダのパスを指定（事前に作成しておく）
+    strExportPath = "C:\ExportModules\" ' 任意のフォルダに変更
+
+    ' VBEオブジェクトの取得
+    Set objVBE = Application.VBE
+    Set objVBProj = objVBE.ActiveVBProject
+
+    ' すべてのモジュールをエクスポート
+    For Each objVBComp In objVBProj.VBComponents
+        strModuleName = objVBComp.Name
+        objVBComp.Export strExportPath & strModuleName & ".bas"
+    Next
+
+    ' オブジェクトの解放
+    Set objVBComp = Nothing
+    Set objVBProj = Nothing
+    Set objVBE = Nothing
+
+    MsgBox "すべてのモジュールをエクスポートしました。", vbInformation
+End Sub
