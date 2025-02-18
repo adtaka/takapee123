@@ -6364,3 +6364,47 @@ Sub subTestCreateSubFolders()
     ' 指定パスのフォルダを再帰的に作成
     subCreateSubFolders strTargetPath
 End Sub
+
+Sub subCopyFilesByExtension()
+    Dim objFSO As Object
+    Dim objFolder As Object
+    Dim objFile As Object
+    Dim strSourceFolder As String
+    Dim strDestinationFolder As String
+    Dim strExtension As String
+    
+    ' コピー元フォルダとコピー先フォルダを指定
+    strSourceFolder = "C:\SourceFolder"  ' コピー元フォルダのパス
+    strDestinationFolder = "C:\DestinationFolder"  ' コピー先フォルダのパス
+    strExtension = "txt"  ' コピーする拡張子（例: "txt"）
+
+    ' FileSystemObject を作成
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+    ' コピー元フォルダの存在確認
+    If Not objFSO.FolderExists(strSourceFolder) Then
+        MsgBox "コピー元フォルダが存在しません。", vbExclamation
+        Exit Sub
+    End If
+
+    ' コピー先フォルダの存在確認（なければ作成）
+    If Not objFSO.FolderExists(strDestinationFolder) Then
+        objFSO.CreateFolder strDestinationFolder
+    End If
+
+    ' フォルダ内のすべてのファイルをループ
+    Set objFolder = objFSO.GetFolder(strSourceFolder)
+    For Each objFile In objFolder.Files
+        ' 指定した拡張子のファイルのみコピー
+        If LCase(objFSO.GetExtensionName(objFile.Name)) = LCase(strExtension) Then
+            objFSO.CopyFile objFile.Path, objFSO.BuildPath(strDestinationFolder, objFile.Name), True
+        End If
+    Next
+
+    ' 後片付け
+    Set objFile = Nothing
+    Set objFolder = Nothing
+    Set objFSO = Nothing
+
+    MsgBox "コピーが完了しました。", vbInformation
+End Sub
