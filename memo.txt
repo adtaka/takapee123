@@ -6441,3 +6441,12 @@ Sub subExportAllModules()
 
     MsgBox "すべてのモジュールをエクスポートしました。", vbInformation
 End Sub
+
+Function fncFileExists(strFilePath As String) As Boolean
+    Dim objFSO As Object
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    
+    fncFileExists = objFSO.FileExists(strFilePath)
+    
+    Set objFSO = Nothing
+End Function
