@@ -6450,3 +6450,42 @@ Function fncFileExists(strFilePath As String) As Boolean
     
     Set objFSO = Nothing
 End Function
+
+
+
+Sub subLinkPasswordProtectedTable()
+    Dim objDb As DAO.Database
+    Dim objTbl As DAO.TableDef
+    Dim strDbPath As String
+    Dim strTblName As String
+    Dim strLinkedTblName As String
+    Dim strPwd As String
+    Dim strConn As String
+
+    strDbPath = "C:\Path\To\ProtectedDatabase.accdb" ' パスワード付きのAccessファイル
+    strTblName = "元のテーブル名"
+    strLinkedTblName = "リンクテーブル名" ' Access内でのテーブル名
+    strPwd = "your_password" ' 設定されたパスワード
+
+    ' パスワード付きの接続文字列
+    strConn = ";DATABASE=" & strDbPath & ";PWD=" & strPwd
+
+    Set objDb = CurrentDb
+
+    ' 既存のリンクがある場合は削除
+    On Error Resume Next
+    objDb.TableDefs.Delete strLinkedTblName
+    On Error GoTo 0
+
+    ' 新しいリンクテーブルを作成
+    Set objTbl = objDb.CreateTableDef(strLinkedTblName)
+    objTbl.Connect = strConn
+    objTbl.SourceTableName = strTblName
+    objDb.TableDefs.Append objTbl
+    objTbl.RefreshLink
+
+    MsgBox "パスワード付きテーブルをリンクしました。", vbInformation
+
+    Set objTbl = Nothing
+    Set objDb = Nothing
+End Sub
