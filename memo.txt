@@ -6661,3 +6661,77 @@ Sub subExportProceduresToTable()
 
     MsgBox "プロシージャ一覧をテーブルに書き込みました。", vbInformation
 End Sub
+
+
+Sub subExportProceduresToTable()
+    Dim objVBE As Object
+    Dim objProject As Object
+    Dim objModule As Object
+    Dim lngProcType As Long
+    Dim lngLine As Long
+    Dim lngProcStart As Long
+    Dim lngProcEnd As Long
+    Dim strProcName As String
+    Dim db As DAO.Database
+    Dim rst As DAO.Recordset
+    Dim colProcedures As Collection
+
+    ' データベース接続
+    Set db = CurrentDb
+    
+    ' テーブルをクリア
+    db.Execute "DELETE FROM tblProcedures", dbFailOnError
+
+    ' VBEオブジェクトの取得
+    Set objVBE = Application.VBE
+    Set objProject = objVBE.VBProjects(1) ' 現在のプロジェクト
+    Set rst = db.OpenRecordset("tblProcedures", dbOpenDynaset)
+
+    ' 各モジュールを取得
+    For Each objModule In objProject.VBComponents
+        If objModule.Type = 1 Then ' 標準モジュールのみ
+            Set colProcedures = New Collection
+            lngLine = 1
+
+            ' モジュールのすべてのプロシージャを列挙
+            Do While lngLine < objModule.CodeModule.CountOfLines
+                ' プロシージャの開始位置を取得
+                strProcName = objModule.CodeModule.ProcOfLine(lngLine, lngProcType)
+
+                ' プロシージャ名が取得できた場合のみ処理
+                If strProcName <> "" Then
+                    On Error Resume Next
+                    colProcedures.Add strProcName, strProcName
+                    If Err.Number = 0 Then
+                        rst.AddNew
+                        rst!moduleName = objModule.Name
+                        rst!procedureName = strProcName
+                        rst!procedureType = Choose(lngProcType + 1, "sub", "fnc", "property") ' 0=sub, 1=fnc, 2=property
+                        rst.Update
+                    End If
+                    Err.Clear
+                    On Error GoTo 0
+
+                    ' プロシージャの開始・終了位置を取得（Nullチェックを防ぐ）
+                    lngProcStart = Nz(objModule.CodeModule.ProcStartLine(strProcName, lngProcType), 0)
+                    lngProcEnd = Nz(objModule.CodeModule.ProcCountLines(strProcName, lngProcType), 0)
+
+                    ' 次のプロシージャの開始位置までジャンプ
+                    lngLine = lngProcStart + lngProcEnd
+                Else
+                    lngLine = lngLine + 1
+                End If
+            Loop
+        End If
+    Next objModule
+
+    ' 後処理
+    rst.Close
+    Set rst = Nothing
+    Set db = Nothing
+    Set objModule = Nothing
+    Set objProject = Nothing
+    Set objVBE = Nothing
+
+    MsgBox "プロシージャ一覧をテーブルに書き込みました。", vbInformation
+End Sub
