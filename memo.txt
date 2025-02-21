@@ -6529,6 +6529,15 @@ Sub subListProcedures()
 End Sub
 
 
+1. 必要なテーブルを作成
+以下のフィールドを持つテーブル tblProcedures を作成してください。
+
+フィールド名	データ型
+moduleName	短いテキスト（モジュール名）
+procedureName	短いテキスト（プロシージャ名）
+procedureType	短いテキスト（"sub" または "fnc"）
+
+
 Sub subExportProceduresToTable()
     Dim objVBE As Object
     Dim objProject As Object
