@@ -6809,3 +6809,77 @@ Sub subExportProceduresToTable()
     MsgBox "プロシージャ一覧を tblSystemProcedures に書き込みました。", vbInformation
 End Sub
 
+Sub subExportProceduresToTable()
+    Dim objVBE As Object
+    Dim objProject As Object
+    Dim objModule As Object
+    Dim lngProcType As Long
+    Dim lngProcStart As Long
+    Dim lngProcEnd As Long
+    Dim strProcName As String
+    Dim db As DAO.Database
+    Dim rst As DAO.Recordset
+    Dim colProcedures As Collection
+
+    ' データベース接続
+    Set db = CurrentDb
+    
+    ' テーブルをクリア
+    db.Execute "DELETE FROM tblSystemProcedures", dbFailOnError
+
+    ' VBEオブジェクトの取得
+    Set objVBE = Application.VBE
+    Set objProject = objVBE.VBProjects(1) ' 現在のプロジェクト
+    Set rst = db.OpenRecordset("tblSystemProcedures", dbOpenDynaset)
+
+    ' 各モジュールを取得
+    For Each objModule In objProject.VBComponents
+        If objModule.Type = 1 Then ' 標準モジュールのみ
+            Set colProcedures = New Collection
+            lngProcStart = 1
+
+            ' モジュールの全プロシージャを取得
+            Do While lngProcStart < objModule.CodeModule.CountOfLines
+                ' プロシージャの開始行を特定
+                strProcName = objModule.CodeModule.ProcOfLine(lngProcStart, lngProcType)
+
+                ' プロシージャ名が取得できた場合のみ処理
+                If strProcName <> "" Then
+                    ' プロシージャの正確な開始位置を取得
+                    lngProcStart = objModule.CodeModule.ProcStartLine(strProcName, lngProcType)
+                    ' プロシージャの終了位置を取得
+                    lngProcEnd = objModule.CodeModule.ProcCountLines(strProcName, lngProcType)
+
+                    ' 重複登録を防ぐ
+                    On Error Resume Next
+                    colProcedures.Add strProcName, strProcName
+                    If Err.Number = 0 Then
+                        rst.AddNew
+                        rst!moduleName = objModule.Name
+                        rst!procedureName = strProcName
+                        rst!procedureType = Choose(lngProcType + 1, "sub", "fnc", "property") ' 0=sub, 1=fnc, 2=property
+                        rst.Update
+                    End If
+                    Err.Clear
+                    On Error GoTo 0
+
+                    ' 次のプロシージャへジャンプ
+                    lngProcStart = lngProcStart + lngProcEnd
+                Else
+                    ' プロシージャ名が取得できない場合、次の行へ
+                    lngProcStart = lngProcStart + 1
+                End If
+            Loop
+        End If
+    Next objModule
+
+    ' 後処理
+    rst.Close
+    Set rst = Nothing
+    Set db = Nothing
+    Set objModule = Nothing
+    Set objProject = Nothing
+    Set objVBE = Nothing
+
+    MsgBox "プロシージャ一覧を tblSystemProcedures に書き込みました。", vbInformation
+End Sub
