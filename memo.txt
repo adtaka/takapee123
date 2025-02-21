@@ -6489,3 +6489,94 @@ Sub subLinkPasswordProtectedTable()
     Set objTbl = Nothing
     Set objDb = Nothing
 End Sub
+
+
+Sub subListProcedures()
+    Dim objVBE As Object
+    Dim objComponent As Object
+    Dim objCodeModule As Object
+    Dim intLine As Integer
+    Dim strProcName As String
+    Dim intProcType As Integer
+    
+    ' VBEオブジェクトの取得
+    Set objVBE = Application.VBE
+
+    ' デバッグウィンドウをクリア
+    Debug.Print "=== プロシージャ一覧 ==="
+
+    ' 各モジュールをループ
+    For Each objComponent In objVBE.VBProjects(1).VBComponents
+        ' コードモジュールを取得
+        Set objCodeModule = objComponent.CodeModule
+        
+        ' 最初のプロシージャを取得
+        intLine = 1
+        strProcName = objCodeModule.ProcOfLine(intLine, intProcType)
+        
+        ' プロシージャを一覧表示
+        Do While strProcName <> ""
+            Debug.Print objComponent.Name & " - " & strProcName
+            intLine = objCodeModule.ProcStartLine(strProcName, intProcType) + objCodeModule.ProcCountLines(strProcName, intProcType) + 1
+            strProcName = objCodeModule.ProcOfLine(intLine, intProcType)
+        Loop
+    Next objComponent
+
+    ' オブジェクト解放
+    Set objCodeModule = Nothing
+    Set objComponent = Nothing
+    Set objVBE = Nothing
+End Sub
+
+
+Sub subExportProceduresToTable()
+    Dim objVBE As Object
+    Dim objProject As Object
+    Dim objModule As Object
+    Dim intProcType As Integer
+    Dim intLine As Integer
+    Dim strProcName As String
+    Dim db As DAO.Database
+    Dim rst As DAO.Recordset
+    
+    ' VBEオブジェクトの取得
+    Set objVBE = Application.VBE
+    Set objProject = objVBE.VBProjects(1) ' 現在のプロジェクト
+    
+    ' データベース接続
+    Set db = CurrentDb
+    Set rst = db.OpenRecordset("tblProcedures", dbOpenDynaset)
+    
+    ' 各モジュールを取得
+    For Each objModule In objProject.VBComponents
+        If objModule.Type = 1 Then ' 標準モジュールのみ
+            intLine = 1
+            Do
+                ' プロシージャを取得
+                strProcName = objModule.CodeModule.ProcOfLine(intLine, intProcType)
+                
+                ' 取得できた場合、テーブルに書き込み
+                If strProcName <> "" Then
+                    rst.AddNew
+                    rst!moduleName = objModule.Name
+                    rst!procedureName = strProcName
+                    rst!procedureType = IIf(intProcType = 0, "sub", "fnc")
+                    rst.Update
+                End If
+                
+                ' 次の行へ
+                intLine = intLine + 1
+            Loop While intLine <= objModule.CodeModule.CountOfLines
+        End If
+    Next objModule
+    
+    ' 後処理
+    rst.Close
+    Set rst = Nothing
+    Set db = Nothing
+    Set objModule = Nothing
+    Set objProject = Nothing
+    Set objVBE = Nothing
+    
+    MsgBox "プロシージャ一覧をテーブルに書き込みました。", vbInformation
+End Sub
