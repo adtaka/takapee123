@@ -6910,6 +6910,7 @@ Function fncEncryptRC4(strPlainText As String, strKey As String) As String
     Dim bytPlain() As Byte, bytKey() As Byte
     Dim intI As Integer, intJ As Integer, intK As Integer
     Dim bytS(255) As Byte, temp As Byte
+    Dim longValue As Long
     
     bytPlain = StrConv(strPlainText, vbFromUnicode)
     bytKey = StrConv(strKey, vbFromUnicode)
@@ -6936,11 +6937,15 @@ Function fncEncryptRC4(strPlainText As String, strKey As String) As String
         temp = bytS(intI)
         bytS(intI) = bytS(intJ)
         bytS(intJ) = temp
-        bytPlain(intK) = bytPlain(intK) Xor bytS((bytS(intI) + bytS(intJ)) Mod 256)
+        
+        ' Xor計算をLongにキャストしてからByteに変換
+        longValue = bytPlain(intK) Xor bytS((bytS(intI) + bytS(intJ)) Mod 256)
+        bytPlain(intK) = CByte(longValue And &HFF) ' Byteの範囲(0-255)に制限
     Next intK
     
     fncEncryptRC4 = StrConv(bytPlain, vbUnicode)
 End Function
+
 
 Function fncDecryptRC4(strCipherText As String, strKey As String) As String
     fncDecryptRC4 = fncEncryptRC4(strCipherText, strKey) ' RC4は暗号化と復号化が同じ処理
