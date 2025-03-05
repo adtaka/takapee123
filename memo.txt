@@ -6883,3 +6883,76 @@ Sub subExportProceduresToTable()
 
     MsgBox "プロシージャ一覧を tblSystemProcedures に書き込みました。", vbInformation
 End Sub
+
+
+
+
+Function fncSHA256(strData As String) As String
+    Dim objSHA As Object
+    Dim bytData() As Byte
+    Dim bytHash() As Byte
+    Dim i As Integer
+    Dim strHex As String
+    
+    Set objSHA = CreateObject("System.Security.Cryptography.SHA256Managed")
+    bytData = StrConv(strData, vbFromUnicode)
+    bytHash = objSHA.ComputeHash_2(bytData)
+    
+    For i = LBound(bytHash) To UBound(bytHash)
+        strHex = strHex & Right("0" & Hex(bytHash(i)), 2)
+    Next i
+    
+    fncSHA256 = strHex
+End Function
+
+
+Function fncEncryptRC4(strPlainText As String, strKey As String) As String
+    Dim bytPlain() As Byte, bytKey() As Byte
+    Dim intI As Integer, intJ As Integer, intK As Integer
+    Dim bytS(255) As Byte, temp As Byte
+    
+    bytPlain = StrConv(strPlainText, vbFromUnicode)
+    bytKey = StrConv(strKey, vbFromUnicode)
+    
+    ' 初期化
+    For intI = 0 To 255
+        bytS(intI) = intI
+    Next intI
+    
+    ' 鍵スケジュール
+    intJ = 0
+    For intI = 0 To 255
+        intJ = (intJ + bytS(intI) + bytKey(intI Mod Len(strKey))) Mod 256
+        temp = bytS(intI)
+        bytS(intI) = bytS(intJ)
+        bytS(intJ) = temp
+    Next intI
+    
+    ' 暗号化
+    intI = 0: intJ = 0
+    For intK = 0 To UBound(bytPlain)
+        intI = (intI + 1) Mod 256
+        intJ = (intJ + bytS(intI)) Mod 256
+        temp = bytS(intI)
+        bytS(intI) = bytS(intJ)
+        bytS(intJ) = temp
+        bytPlain(intK) = bytPlain(intK) Xor bytS((bytS(intI) + bytS(intJ)) Mod 256)
+    Next intK
+    
+    fncEncryptRC4 = StrConv(bytPlain, vbUnicode)
+End Function
+
+Function fncDecryptRC4(strCipherText As String, strKey As String) As String
+    fncDecryptRC4 = fncEncryptRC4(strCipherText, strKey) ' RC4は暗号化と復号化が同じ処理
+End Function
+
+Dim strPassword As String
+Dim strEncrypted As String
+Dim strDecrypted As String
+
+strPassword = "MySecretPassword"
+strEncrypted = fncEncryptRC4(strPassword, "MyKey") ' 暗号化
+strDecrypted = fncDecryptRC4(strEncrypted, "MyKey") ' 復号化
+
+MsgBox "暗号化: " & strEncrypted & vbCrLf & "復号化: " & strDecrypted
+
