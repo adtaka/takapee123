@@ -6910,6 +6910,7 @@ Function fncEncryptRC4(strPlainText As String, strKey As String) As String
     Dim bytPlain() As Byte, bytKey() As Byte
     Dim intI As Integer, intJ As Integer, intK As Integer
     Dim bytS(255) As Byte, temp As Byte
+    Dim longIndex As Long
     Dim longValue As Long
     
     bytPlain = StrConv(strPlainText, vbFromUnicode)
@@ -6938,9 +6939,11 @@ Function fncEncryptRC4(strPlainText As String, strKey As String) As String
         bytS(intI) = bytS(intJ)
         bytS(intJ) = temp
         
-        ' Xor計算をLongにキャストしてからByteに変換
-        longValue = bytPlain(intK) Xor bytS((bytS(intI) + bytS(intJ)) Mod 256)
-        bytPlain(intK) = CByte(longValue And &HFF) ' Byteの範囲(0-255)に制限
+        ' オーバーフローを防ぐためにLong型で計算
+        longIndex = (CLng(bytS(intI)) + CLng(bytS(intJ))) Mod 256
+        longValue = bytPlain(intK) Xor bytS(longIndex)
+        
+        bytPlain(intK) = CByte(longValue And &HFF) ' Byte型に戻す
     Next intK
     
     fncEncryptRC4 = StrConv(bytPlain, vbUnicode)
