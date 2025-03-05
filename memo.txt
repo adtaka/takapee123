@@ -6887,25 +6887,30 @@ End Sub
 
 
 
-Function fncSHA256(strData As String) As String
-    Dim objSHA As Object
-    Dim bytData() As Byte
-    Dim bytHash() As Byte
-    Dim i As Integer
-    Dim strHex As String
-    
-    Set objSHA = CreateObject("System.Security.Cryptography.SHA256Managed")
-    bytData = StrConv(strData, vbFromUnicode)
-    bytHash = objSHA.ComputeHash_2(bytData)
-    
-    For i = LBound(bytHash) To UBound(bytHash)
-        strHex = strHex & Right("0" & Hex(bytHash(i)), 2)
-    Next i
-    
-    fncSHA256 = strHex
+' --- Base64エンコード・デコードのための関数 ---
+Function fncBase64Encode(bytData() As Byte) As String
+    Dim objXML As Object, objNode As Object
+    Set objXML = CreateObject("MSXML2.DOMDocument")
+    Set objNode = objXML.createElement("Base64")
+    objNode.DataType = "bin.hex"
+    objNode.nodeTypedValue = bytData
+    fncBase64Encode = objNode.Text
+    Set objNode = Nothing
+    Set objXML = Nothing
 End Function
 
+Function fncBase64Decode(strBase64 As String) As Byte()
+    Dim objXML As Object, objNode As Object
+    Set objXML = CreateObject("MSXML2.DOMDocument")
+    Set objNode = objXML.createElement("Base64")
+    objNode.DataType = "bin.hex"
+    objNode.Text = strBase64
+    fncBase64Decode = objNode.nodeTypedValue
+    Set objNode = Nothing
+    Set objXML = Nothing
+End Function
 
+' --- RC4暗号化・復号化（オーバーフロー対策済み） ---
 Function fncEncryptRC4(strPlainText As String, strKey As String) As String
     Dim bytPlain() As Byte, bytKey() As Byte
     Dim intI As Integer, intJ As Integer, intK As Integer
@@ -6913,15 +6918,16 @@ Function fncEncryptRC4(strPlainText As String, strKey As String) As String
     Dim longIndex As Long
     Dim longValue As Long
     
+    ' 文字列をバイト配列に変換（UTF-8を考慮）
     bytPlain = StrConv(strPlainText, vbFromUnicode)
     bytKey = StrConv(strKey, vbFromUnicode)
     
-    ' 初期化
+    ' Sボックスの初期化
     For intI = 0 To 255
         bytS(intI) = intI
     Next intI
     
-    ' 鍵スケジュール
+    ' 鍵スケジュールアルゴリズム (KSA)
     intJ = 0
     For intI = 0 To 255
         intJ = (intJ + bytS(intI) + bytKey(intI Mod Len(strKey))) Mod 256
@@ -6930,7 +6936,7 @@ Function fncEncryptRC4(strPlainText As String, strKey As String) As String
         bytS(intJ) = temp
     Next intI
     
-    ' 暗号化
+    ' 暗号化処理 (PRGA)
     intI = 0: intJ = 0
     For intK = 0 To UBound(bytPlain)
         intI = (intI + 1) Mod 256
@@ -6939,20 +6945,65 @@ Function fncEncryptRC4(strPlainText As String, strKey As String) As String
         bytS(intI) = bytS(intJ)
         bytS(intJ) = temp
         
-        ' オーバーフローを防ぐためにLong型で計算
+        ' **オーバーフロー対策（計算時にLong型にキャスト）**
         longIndex = (CLng(bytS(intI)) + CLng(bytS(intJ))) Mod 256
-        longValue = bytPlain(intK) Xor bytS(longIndex)
+        longValue = CLng(bytPlain(intK)) Xor CLng(bytS(longIndex))
         
-        bytPlain(intK) = CByte(longValue And &HFF) ' Byte型に戻す
+        ' **結果をByte型に戻す（範囲 0〜255 に制限）**
+        bytPlain(intK) = CByte(longValue And &HFF)
     Next intK
     
-    fncEncryptRC4 = StrConv(bytPlain, vbUnicode)
+    ' Base64エンコードして返す（文字列として扱えるようにする）
+    fncEncryptRC4 = fncBase64Encode(bytPlain)
 End Function
-
 
 Function fncDecryptRC4(strCipherText As String, strKey As String) As String
-    fncDecryptRC4 = fncEncryptRC4(strCipherText, strKey) ' RC4は暗号化と復号化が同じ処理
+    Dim bytCipher() As Byte
+    Dim bytKey() As Byte
+    Dim intI As Integer, intJ As Integer, intK As Integer
+    Dim bytS(255) As Byte, temp As Byte
+    Dim longIndex As Long
+    Dim longValue As Long
+    
+    ' Base64デコード（バイナリデータに戻す）
+    bytCipher = fncBase64Decode(strCipherText)
+    bytKey = StrConv(strKey, vbFromUnicode)
+    
+    ' Sボックスの初期化
+    For intI = 0 To 255
+        bytS(intI) = intI
+    Next intI
+    
+    ' 鍵スケジュールアルゴリズム (KSA)
+    intJ = 0
+    For intI = 0 To 255
+        intJ = (intJ + bytS(intI) + bytKey(intI Mod Len(strKey))) Mod 256
+        temp = bytS(intI)
+        bytS(intI) = bytS(intJ)
+        bytS(intJ) = temp
+    Next intI
+    
+    ' 復号化処理 (PRGA)
+    intI = 0: intJ = 0
+    For intK = 0 To UBound(bytCipher)
+        intI = (intI + 1) Mod 256
+        intJ = (intJ + bytS(intI)) Mod 256
+        temp = bytS(intI)
+        bytS(intI) = bytS(intJ)
+        bytS(intJ) = temp
+        
+        ' **オーバーフロー対策（計算時にLong型にキャスト）**
+        longIndex = (CLng(bytS(intI)) + CLng(bytS(intJ))) Mod 256
+        longValue = CLng(bytCipher(intK)) Xor CLng(bytS(longIndex))
+        
+        ' **結果をByte型に戻す（範囲 0〜255 に制限）**
+        bytCipher(intK) = CByte(longValue And &HFF)
+    Next intK
+    
+    ' バイト配列を文字列に戻して返す
+    fncDecryptRC4 = StrConv(bytCipher, vbUnicode)
 End Function
+
 
 Dim strPassword As String
 Dim strEncrypted As String
