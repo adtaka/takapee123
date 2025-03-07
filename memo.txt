@@ -7105,3 +7105,62 @@ Sub prcChangeAccessPassword()
 
     MsgBox "パスワードが変更されました。", vbInformation
 End Sub
+
+Sub subリンクテーブルを隠しオブジェクトに設定()
+    Dim objDb As DAO.Database
+    Dim str外部DbPath As String
+    Dim strテーブル名 As String
+    Dim strリンク名 As String
+    Dim objTableDef As DAO.TableDef
+
+    ' 外部データベースのパス
+    str外部DbPath = "C:\Path\To\Database.accdb"
+
+    ' リンクするテーブル名
+    strテーブル名 = "外部テーブル"
+
+    ' リンクテーブルの名前（Access側で表示される名前）
+    strリンク名 = "リンク_外部テーブル"
+
+    ' リンクテーブル作成
+    DoCmd.TransferDatabase acLink, "Microsoft Access", str外部DbPath, acTable, strテーブル名, strリンク名
+
+    ' 隠しオブジェクトに設定
+    Set objDb = CurrentDb
+    Set objTableDef = objDb.TableDefs(strリンク名)
+    objTableDef.Attributes = objTableDef.Attributes Or dbHiddenObject
+
+    ' 後処理
+    Set objTableDef = Nothing
+    objDb.Close
+    Set objDb = Nothing
+
+    MsgBox "リンクテーブルを隠しオブジェクトに設定しました。", vbInformation
+End Sub
+
+Sub subリンクテーブル読み取り専用()
+    Dim objDb As DAO.Database
+    Dim str外部DbPath As String
+    Dim strテーブル名 As String
+    Dim strリンク名 As String
+
+    ' 外部データベースのパス
+    str外部DbPath = "C:\Path\To\Database.accdb"
+
+    ' リンクするテーブル名
+    strテーブル名 = "外部テーブル"
+
+    ' リンクテーブルの名前（Access側で表示される名前）
+    strリンク名 = "リンク_外部テーブル"
+
+    ' リンクテーブル作成
+    DoCmd.TransferDatabase acLink, "Microsoft Access", str外部DbPath, acTable, strテーブル名, strリンク名
+
+    ' 読み取り専用設定
+    Set objDb = CurrentDb
+    objDb.TableDefs(strリンク名).Attributes = dbAttachReadOnly
+    objDb.Close
+
+    MsgBox "リンクテーブルを読み取り専用で作成しました。", vbInformation
+End Sub
+
