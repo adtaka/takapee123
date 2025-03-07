@@ -7015,3 +7015,32 @@ strDecrypted = fncDecryptRC4(strEncrypted, "MyKey") ' 復号化
 
 MsgBox "暗号化: " & strEncrypted & vbCrLf & "復号化: " & strDecrypted
 
+
+
+Sub subリンクテーブル読み取り専用隠し()
+    Dim objDb As DAO.Database
+    Dim str外部DbPath As String
+    Dim strテーブル名 As String
+    Dim strリンク名 As String
+
+    ' 外部データベースのパス
+    str外部DbPath = "C:\Path\To\Database.accdb"
+
+    ' リンクするテーブル名
+    strテーブル名 = "外部テーブル"
+
+    ' リンクテーブルの名前（Access側で表示される名前）
+    strリンク名 = "リンク_外部テーブル"
+
+    ' リンクテーブル作成
+    DoCmd.TransferDatabase acLink, "Microsoft Access", str外部DbPath, acTable, strテーブル名, strリンク名
+
+    ' 読み取り専用設定 & 隠しオブジェクト設定
+    Set objDb = CurrentDb
+    With objDb.TableDefs(strリンク名)
+        .Attributes = dbAttachReadOnly Or dbHiddenObject
+    End With
+    objDb.Close
+
+    MsgBox "リンクテーブルを読み取り専用＆隠しオブジェクトにしました。", vbInformation
+End Sub
