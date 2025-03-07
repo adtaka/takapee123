@@ -7071,3 +7071,37 @@ Sub subリンクテーブル読み取り専用隠し()
     MsgBox "リンクテーブルを読み取り専用＆隠しオブジェクトにしました。", vbInformation
 End Sub
 
+Sub prcChangeAccessPassword()
+    Dim objCatalog As Object
+    Dim strDbPath As String
+    Dim strOldPwd As String
+    Dim strNewPwd As String
+    Dim strConn As String
+    
+    ' 外部 Access ファイルのパス
+    strDbPath = "C:\Path\To\Database.accdb"
+    
+    ' 現在のパスワード
+    strOldPwd = "oldpassword"
+    
+    ' 新しいパスワード
+    strNewPwd = "newpassword"
+
+    ' ADOX カタログオブジェクトを作成
+    Set objCatalog = CreateObject("ADOX.Catalog")
+
+    ' 接続文字列を作成
+    strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & strDbPath & ";Jet OLEDB:Database Password=" & strOldPwd & ";"
+
+    ' データベースを開く
+    objCatalog.ActiveConnection = strConn
+
+    ' 新しいパスワードを設定
+    objCatalog.ActiveConnection.Execute "ALTER DATABASE PASSWORD [" & strNewPwd & "] [" & strOldPwd & "]"
+
+    ' オブジェクトを解放
+    objCatalog.ActiveConnection.Close
+    Set objCatalog = Nothing
+
+    MsgBox "パスワードが変更されました。", vbInformation
+End Sub
