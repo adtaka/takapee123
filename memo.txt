@@ -7219,3 +7219,28 @@ For Each ctr In Me.Controls
         Debug.Print ctr.Name ' ボタン名を出力
     End If
 Next
+
+
+Dim objExtDb As DAO.Database
+Dim strDbPath As String
+Dim strPassword As String
+Dim strFormName As String
+
+strDbPath = "C:\Path\To\ExternalDB.accdb"  ' 外部データベースのパス
+strPassword = "yourpassword"               ' パスワード
+strFormName = "YourFormName"                ' 開きたいフォーム名
+
+On Error Resume Next
+Set objExtDb = DBEngine.Workspaces(0).OpenDatabase(strDbPath, False, False, ";PWD=" & strPassword)
+If Err.Number <> 0 Then
+    MsgBox "データベースを開く際にエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "エラー"
+    Exit Sub
+End If
+On Error GoTo 0
+
+' 外部データベースのフォームを開く
+DoCmd.OpenForm strFormName, acNormal
+
+' 終了時に外部DBの接続を閉じる
+objExtDb.Close
+Set objExtDb = Nothing
