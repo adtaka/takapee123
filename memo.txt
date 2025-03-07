@@ -7213,3 +7213,9 @@ Sub subLinkReadOnlyTable()
     MsgBox "読み取り専用リンクが作成されました。", vbInformation
 End Sub
 
+Dim ctr As Control
+For Each ctr In Me.Controls
+    If TypeOf ctr Is CommandButton Then
+        Debug.Print ctr.Name ' ボタン名を出力
+    End If
+Next
