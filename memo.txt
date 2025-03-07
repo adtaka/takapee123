@@ -7164,3 +7164,52 @@ Sub subリンクテーブル読み取り専用()
     MsgBox "リンクテーブルを読み取り専用で作成しました。", vbInformation
 End Sub
 
+
+Sub subLinkReadOnlyTable()
+    Dim dbs As DAO.Database
+    Dim tdf As DAO.TableDef
+    Dim strDbPath As String
+    Dim strPassword As String
+    Dim strTableName As String
+    Dim strLinkedTableName As String
+    Dim strConnection As String
+
+    ' リンク先のデータベースのパス
+    strDbPath = "C:\Path\To\YourDatabase.accdb"
+
+    ' パスワード（適宜変更）
+    strPassword = "yourpassword"
+
+    ' 接続文字列（ODBC経由で読み取り専用）
+    strConnection = "ODBC;DSN=MS Access Database;DBQ=" & strDbPath & ";PWD=" & strPassword & ";ReadOnly=1"
+
+    ' リンクするテーブル名
+    strTableName = "SourceTable"
+
+    ' リンク後のテーブル名
+    strLinkedTableName = "Linked_ReadOnlyTable"
+
+    ' データベースを取得
+    Set dbs = CurrentDb
+
+    ' 既存のリンクを削除
+    For Each tdf In dbs.TableDefs
+        If tdf.Name = strLinkedTableName Then
+            dbs.TableDefs.Delete strLinkedTableName
+            Exit For
+        End If
+    Next
+
+    ' 新しいリンクテーブルを作成
+    Set tdf = dbs.CreateTableDef(strLinkedTableName)
+    tdf.Connect = strConnection
+    tdf.SourceTableName = strTableName
+    dbs.TableDefs.Append tdf
+
+    ' 後処理
+    Set tdf = Nothing
+    Set dbs = Nothing
+
+    MsgBox "読み取り専用リンクが作成されました。", vbInformation
+End Sub
+
