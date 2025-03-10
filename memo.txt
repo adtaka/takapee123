@@ -7330,3 +7330,35 @@ Sub subOpenExternalAccessForm()
     ' オブジェクトを解放（必要に応じて）
     Set objAccess = Nothing
 End Sub
+
+
+Sub subOpenExternalAccessForm()
+    Dim objAccess As Object
+    Dim strExternalDbPath As String
+    Dim strFormName As String
+
+    ' 外部Accessファイルのパスを指定
+    strExternalDbPath = "C:\Path\To\ExternalDB.accdb"
+    
+    ' 開くフォームの名前を指定
+    strFormName = "frmTargetForm"
+
+    ' Accessアプリケーションを作成
+    Set objAccess = CreateObject("Access.Application")
+
+    ' 外部のAccessデータベースを開く
+    objAccess.OpenCurrentDatabase strExternalDbPath
+
+    ' フォームを開く（acNormal: 通常のフォームビュー）
+    objAccess.DoCmd.OpenForm strFormName, acNormal
+
+    ' ナビゲーションウィンドウを確実に非表示にする
+    objAccess.DoCmd.SelectObject acTable, , True
+    objAccess.DoCmd.RunCommand acCmdWindowHide
+
+    ' Accessウィンドウを表示
+    objAccess.Visible = True
+
+    ' オブジェクトを解放（必要に応じて）
+    Set objAccess = Nothing
+End Sub
