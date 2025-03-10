@@ -7259,3 +7259,23 @@ strFormName = "YourFormName"                ' 開きたいフォーム名
 strCmd = """C:\Program Files\Microsoft Office\root\OfficeXX\MSACCESS.EXE"" """ & strDbPath & """ /pwd " & strPassword & " /x " & strFormName
 Shell strCmd, vbNormalFocus
 
+
+
+Dim objAccess As Object
+Dim strFilePath As String
+Dim strPassword As String
+
+strFilePath = "C:\Path\To\YourDatabase.accdb"
+strPassword = "yourpassword"
+
+' Accessアプリケーションを起動
+Set objAccess = CreateObject("Access.Application")
+
+' パスワードを指定してデータベースを開く
+objAccess.OpenCurrentDatabase strFilePath, False, strPassword
+
+' 外部データベースのフォームを開く
+objAccess.DoCmd.OpenForm "外部フォーム名", acNormal
+
+' Accessウィンドウを表示する（非表示にしたい場合は False）
+objAccess.Visible = True
