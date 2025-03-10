@@ -7244,3 +7244,18 @@ DoCmd.OpenForm strFormName, acNormal
 ' 終了時に外部DBの接続を閉じる
 objExtDb.Close
 Set objExtDb = Nothing
+
+
+Dim strDbPath As String
+Dim strPassword As String
+Dim strFormName As String
+Dim strCmd As String
+
+strDbPath = "C:\Path\To\ExternalDB.accdb"  ' 外部データベースのパス
+strPassword = "yourpassword"               ' パスワード
+strFormName = "YourFormName"                ' 開きたいフォーム名
+
+' MS Accessを新規インスタンスで起動し、フォームを開く
+strCmd = """C:\Program Files\Microsoft Office\root\OfficeXX\MSACCESS.EXE"" """ & strDbPath & """ /pwd " & strPassword & " /x " & strFormName
+Shell strCmd, vbNormalFocus
+
