@@ -7476,3 +7476,29 @@ With objDlg
 End With
 
 Set objDlg = Nothing
+
+
+Dim objEngine As DBEngine
+Set objEngine = DBEngine(0)
+
+Dim strOldDb As String
+Dim strNewDb As String
+Dim strOldPassword As String
+Dim strNewPassword As String
+
+strOldDb = "C:\Path\To\YourDatabase.accdb"  ' 元のDB
+strNewDb = "C:\Path\To\NewDatabase.accdb"  ' 新しいDB（最終的に置き換える）
+strOldPassword = "oldpass" ' 旧パスワード
+strNewPassword = "newpass" ' 新パスワード
+
+' CompactDatabaseを実行してパスワードを変更
+objEngine.CompactDatabase _
+    "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & strOldDb & ";Jet OLEDB:Database Password=" & strOldPassword & ";", _
+    "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & strNewDb & ";Jet OLEDB:Database Password=" & strNewPassword & ";"
+
+' 古いデータベースを削除して、新しいデータベースに置き換え
+Kill strOldDb
+Name strNewDb As strOldDb
+
+Set objEngine = Nothing
+MsgBox "パスワード変更完了"
