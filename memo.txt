@@ -7526,3 +7526,36 @@ objEngine.CompactDatabase _
 ' 旧DBを削除 & 新DBをリネーム（オプション）
 Kill strOldDb
 Name strNewDb As strOldDb
+
+
+
+
+
+
+
+Dim objCatalog As Object
+Set objCatalog = CreateObject("ADOX.Catalog")
+
+Dim strConn As String
+Dim strOldDb As String
+Dim strNewDb As String
+Dim strOldPassword As String
+Dim strNewPassword As String
+
+strOldDb = "C:\Users\yourname\Documents\oldDb.accdb"
+strNewDb = "C:\Users\yourname\Documents\newDb.accdb"
+strOldPassword = "oldpass"
+strNewPassword = "newpass"
+
+strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & strOldDb & ";Jet OLEDB:Database Password=" & strOldPassword & ";"
+
+' パスワード変更
+objCatalog.ActiveConnection = strConn
+objCatalog.Create "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & strNewDb & ";Jet OLEDB:Database Password=" & strNewPassword & ";"
+
+Set objCatalog = Nothing
+
+' 旧DBを削除 & 新DBをリネーム
+Kill strOldDb
+Name strNewDb As strOldDb
+
