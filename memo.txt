@@ -7406,3 +7406,36 @@ End Sub
 「境界スタイル」： ダイアログ
 「タブ付きドキュメント」： いいえ（重ね表示）
 これにより、Access本体を最小化しても、フォームが消えずに表示され続ける。
+
+Sub subChangeDatabasePassword()
+    Dim objEngine As DAO.DBEngine
+    Dim strOldDb As String
+    Dim strNewDb As String
+    Dim strOldPassword As String
+    Dim strNewPassword As String
+
+    ' 元のデータベースファイルのパス
+    strOldDb = "C:\Path\To\Database.accdb"  ' 変更するファイルのパス
+    strNewDb = "C:\Path\To\Database_New.accdb"  ' 一時ファイル
+
+    ' 古いパスワードと新しいパスワード
+    strOldPassword = "oldpass"
+    strNewPassword = "newpass"
+
+    ' DAOエンジンの作成
+    Set objEngine = New DAO.DBEngine
+
+    ' CompactDatabaseを使用してパスワードを変更
+    objEngine.CompactDatabase _
+        "MS Access;PWD=" & strOldPassword & ";DATABASE=" & strOldDb, _
+        "MS Access;PWD=" & strNewPassword & ";DATABASE=" & strNewDb
+
+    ' 元のファイルを削除し、新しいファイルの名前を元に戻す
+    Kill strOldDb
+    Name strNewDb As strOldDb
+
+    ' 後処理
+    Set objEngine = Nothing
+    MsgBox "パスワードの変更が完了しました。", vbInformation
+
+End Sub
