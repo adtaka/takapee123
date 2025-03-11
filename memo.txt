@@ -7459,3 +7459,20 @@ With dlgFile
 End With
 
 Set dlgFile = Nothing
+
+
+Dim objDlg As Object
+Set objDlg = Application.FileDialog(3) ' 3 = msoFileDialogFilePicker
+
+With objDlg
+    .Title = "ファイルを選択"
+    .AllowMultiSelect = False
+    .Filters.Clear
+    .Filters.Add "すべてのファイル", "*.*"
+
+    If .Show = -1 Then
+        MsgBox "選択されたファイル: " & .SelectedItems(1), vbInformation
+    End If
+End With
+
+Set objDlg = Nothing
