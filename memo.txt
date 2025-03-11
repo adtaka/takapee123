@@ -7397,3 +7397,12 @@ Sub subOpenExternalAccessForm()
     ' オブジェクトを解放
     Set objAccess = Nothing
 End Sub
+
+
+2. フォームのプロパティを設定
+外部Accessのフォーム (frmTargetForm) のデザインビューで以下の設定を行う。
+「ポップアップ」： はい
+「モーダル」： はい
+「境界スタイル」： ダイアログ
+「タブ付きドキュメント」： いいえ（重ね表示）
+これにより、Access本体を最小化しても、フォームが消えずに表示され続ける。
