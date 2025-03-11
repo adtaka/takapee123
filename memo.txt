@@ -7439,3 +7439,23 @@ Sub subChangeDatabasePassword()
     MsgBox "パスワードの変更が完了しました。", vbInformation
 
 End Sub
+
+
+Dim dlgFile As FileDialog
+Dim strFilePath As String
+
+Set dlgFile = Application.FileDialog(msoFileDialogFilePicker)
+
+With dlgFile
+    .Title = "ファイルを選択"
+    .AllowMultiSelect = False ' 単一選択
+    .Filters.Clear
+    .Filters.Add "すべてのファイル", "*.*"
+    
+    If .Show = -1 Then
+        strFilePath = .SelectedItems(1) ' 選択されたファイルパスを取得
+        MsgBox "選択されたファイル: " & strFilePath, vbInformation
+    End If
+End With
+
+Set dlgFile = Nothing
