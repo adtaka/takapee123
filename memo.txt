@@ -7502,3 +7502,27 @@ Name strNewDb As strOldDb
 
 Set objEngine = Nothing
 MsgBox "パスワード変更完了"
+
+Dim objEngine As New DAO.DBEngine
+Dim strOldDb As String
+Dim strNewDb As String
+Dim strOldPassword As String
+Dim strNewPassword As String
+
+strOldDb = "C:\Users\yourname\Documents\oldDb.accdb" ' 変更前のDB
+strNewDb = "C:\Users\yourname\Documents\newDb.accdb" ' 変更後のDB
+strOldPassword = "oldpass"
+strNewPassword = "newpass"
+
+' Debugでパスを確認
+Debug.Print "OldDB: " & strOldDb
+Debug.Print "NewDB: " & strNewDb
+
+' パスワード変更処理
+objEngine.CompactDatabase _
+    "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & strOldDb & ";Jet OLEDB:Database Password=" & strOldPassword & ";", _
+    "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & strNewDb & ";Jet OLEDB:Database Password=" & strNewPassword & ";"
+
+' 旧DBを削除 & 新DBをリネーム（オプション）
+Kill strOldDb
+Name strNewDb As strOldDb
