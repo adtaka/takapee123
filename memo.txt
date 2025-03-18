@@ -7559,3 +7559,135 @@ Set objCatalog = Nothing
 Kill strOldDb
 Name strNewDb As strOldDb
 
+
+
+Option Explicit
+Private Const DACL_SECURITY_INFORMATION As Long = &H4
+
+Private Declare PtrSafe Function GetNamedSecurityInfo Lib "advapi32.dll" Alias "GetNamedSecurityInfoA" ( _
+    ByVal lpObjectName As String, _
+    ByVal ObjectType As Long, _
+    ByVal SecurityInfo As Long, _
+    ppsidOwner As LongPtr, _
+    ppsidGroup As LongPtr, _
+    ppDacl As LongPtr, _
+    ppSacl As LongPtr, _
+    pSecurityDescriptor As LongPtr _
+) As Long
+
+Private Declare PtrSafe Function LookupAccountSid Lib "advapi32.dll" Alias "LookupAccountSidA" ( _
+    ByVal lpSystemName As String, _
+    ByVal Sid As LongPtr, _
+    ByVal Name As String, _
+    cbName As Long, _
+    ByVal ReferencedDomainName As String, _
+    cbReferencedDomainName As Long, _
+    peUse As Long _
+) As Long
+
+Private Const SE_FILE_OBJECT As Long = 1
+Private Const ERROR_SUCCESS As Long = 0
+
+Public Sub prcGetFolderPermissions(strFolderPath As String)
+    Dim lngResult As Long
+    Dim pSidOwner As LongPtr
+    Dim pSidGroup As LongPtr
+    Dim pDacl As LongPtr
+    Dim pSacl As LongPtr
+    Dim pSecurityDescriptor As LongPtr
+    
+    ' フォルダのセキュリティ情報を取得
+    lngResult = GetNamedSecurityInfo(strFolderPath, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, _
+                                    pSidOwner, pSidGroup, pDacl, pSacl, pSecurityDescriptor)
+    
+    If lngResult <> ERROR_SUCCESS Then
+        MsgBox "フォルダのアクセス権限の取得に失敗しました。", vbCritical
+        Exit Sub
+    End If
+    
+    ' ここで pDacl を解析して、各ユーザーの権限を取得する処理を追加
+    ' (解析には `GetExplicitEntriesFromAcl` などのAPIを使用)
+    
+    MsgBox "アクセス権限の取得が完了しました。詳細な解析処理は追加が必要です。", vbInformation
+End Sub
+
+
+Public Function fncSelectFolder() As String
+    Dim objFileDialog As Object
+    Dim strSelectedFolder As String
+    
+    ' FileDialog オブジェクトを作成
+    Set objFileDialog = Application.FileDialog(4) ' msoFileDialogFolderPicker = 4
+    
+    With objFileDialog
+        .Title = "フォルダを選択してください"
+        .AllowMultiSelect = False
+        
+        ' フォルダが選択された場合
+        If .Show = -1 Then
+            strSelectedFolder = .SelectedItems(1)
+        Else
+            strSelectedFolder = ""
+        End If
+    End With
+    
+    ' オブジェクト解放
+    Set objFileDialog = Nothing
+    
+    ' 結果を返す
+    fncSelectFolder = strSelectedFolder
+End Function
+
+Public Sub prcTestSelectFolder()
+    Dim strFolder As String
+    strFolder = fncSelectFolder()
+    Dim str As String
+    str = fncCheckFolderAccess(strFolder)
+'    If strFolder <> "" Then
+        MsgBox str & ": " & strFolder, vbInformation
+'    Else
+'        MsgBox "フォルダが選択されませんでした", vbExclamation
+'    End If
+    prcGetFolderPermissions (strFolder)
+End Sub
+
+
+Function fncCheckFolderAccess(strFolderPath As String) As String
+    Dim objFSO As Object
+    Dim objTestFile As Object
+    Dim strTestFilePath As String
+    
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    
+    ' フォルダが存在するかチェック
+    If Not objFSO.FolderExists(strFolderPath) Then
+        fncCheckFolderAccess = "フォルダが存在しません"
+        Exit Function
+    End If
+    
+    ' 読み取りテスト
+    On Error Resume Next
+    Dim objFolder As Object
+    Set objFolder = objFSO.GetFolder(strFolderPath)
+    If Err.Number <> 0 Then
+        fncCheckFolderAccess = "読み取り不可"
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' 書き込みテスト
+    strTestFilePath = strFolderPath & "\test.tmp"
+    On Error Resume Next
+    Set objTestFile = objFSO.CreateTextFile(strTestFilePath, True)
+    If Err.Number = 0 Then
+        objTestFile.Close
+        objFSO.DeleteFile strTestFilePath
+        fncCheckFolderAccess = "読み書き可能"
+    Else
+        fncCheckFolderAccess = "書き込み不可"
+    End If
+    On Error GoTo 0
+    
+    Set objFSO = Nothing
+End Function
+
